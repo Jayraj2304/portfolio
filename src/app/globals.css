@@ -44,24 +44,65 @@ body {
 
 /* Figma Box Styles */
 .figma-box {
-  border: 1.5px solid #3b82f6;
+  border-width: 1.5px;
+  border-style: solid;
   position: relative;
   background: transparent;
 }
 
 .figma-handle {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background: white;
   border: 1.5px solid #3b82f6;
-  border-radius: 50%;
+  border-radius: 0px;
 }
 
-.figma-handle-tl { top: -4px; left: -4px; }
-.figma-handle-tr { top: -4px; right: -4px; }
-.figma-handle-bl { bottom: -4px; left: -4px; }
-.figma-handle-br { bottom: -4px; right: -4px; }
+.figma-handle-tl { top: -3px; left: -3px; }
+.figma-handle-tr { top: -3px; right: -3px; }
+.figma-handle-bl { bottom: -3px; left: -3px; }
+.figma-handle-br { bottom: -3px; right: -3px; }
+
+/* Canvas Grid & Pointer Glows */
+.figma-canvas {
+  position: relative;
+  background-color: #fafbfc;
+  background-image: radial-gradient(circle, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* User cursor glow */
+.figma-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 280px at var(--user-x, 0px) var(--user-y, 0px),
+    rgba(59, 130, 246, 0.08) 0%,
+    rgba(99, 102, 241, 0.02) 40%,
+    transparent 100%
+  );
+  opacity: var(--user-active, 0);
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+/* Bot cursor glow */
+.figma-canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 240px at var(--bot-x, 0px) var(--bot-y, 0px),
+    rgba(239, 68, 68, 0.08) 0%,
+    rgba(251, 146, 60, 0.02) 50%,
+    transparent 100%
+  );
+  z-index: 0;
+}
 
 /* Fancy Font Override rules */
 .fancy-font-active h1:not(.no-fancy),
@@ -120,4 +161,34 @@ mark {
   .cursor-pointer {
     cursor: pointer !important;
   }
+}
+
+/* Floating Ambient Glow Animations for Glass Cards */
+@keyframes float-glow-1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(35px, -20px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 30px) scale(0.92);
+  }
+}
+
+@keyframes float-glow-2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-30px, 25px) scale(1.08);
+  }
+}
+
+.animate-float-1 {
+  animation: float-glow-1 12s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-glow-2 16s ease-in-out infinite;
 }

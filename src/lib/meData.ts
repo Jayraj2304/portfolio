@@ -29,6 +29,14 @@ Ambitious Software Engineer with hands-on experience in cross-platform developme
 * Designed a local-first, staged push protocol to securely distribute software updates chunk-by-chunk across air-gapped networks.
 * **Stack:** C#, .NET 10, WPF, FFmpeg, React, Tailwind CSS, MediaMTX, SQLite, Dapper.
 
+**Volunteering, SSYV BhaktiSetu** | Remote / Ahmedabad
+*Lead Frontend & UI/UX Engineer* | Jun 2025 -- Present
+* Led frontend architecture and UI/UX design for a self-hosted, enterprise-grade Devotee Management Platform, integrating intelligent semantic parsing to categorize data for 3,000+ active users.
+* Engineered a high-performance, conditional onboarding pipeline and dashboard using Next.js 15, React 19, and TypeScript, leveraging AI/LLM assistants to parse devotee information and enforcing strict data integrity with Zod.
+* Designed a data-dense, futuristic administrative interface using Tailwind CSS 4, utilizing glassmorphic card layouts and AI-assisted dynamic sorting to optimize complex data table navigation and reduce visual fatigue.
+* Collaborated with a 4-person development team to integrate the frontend with a sovereign, Dockerized backend ecosystem and private AI inference pipelines to ensure absolute data privacy.
+* **Stack:** Next.js 15, React 19, Tailwind CSS 4, TypeScript, Zod, Docker, AI Integration.
+
 **Freelance Work** | Ahmedabad
 *Web Developer* | May 2025 -- May 2026
 * Independently developed and deployed high-performance, SEO-optimized business websites (khodiyarmovers.com, devnandan.co.in), handling end-to-end UI/UX design and asset optimization.
@@ -43,6 +51,13 @@ Ambitious Software Engineer with hands-on experience in cross-platform developme
 * Engineered the complete backend and configured automated CI/CD pipelines to ensure seamless feature delivery.
 * Designed a robust NoSQL database schema to handle complex user profiles, dynamic workout logs, and real-time progress tracking.
 * **Stack:** React 19, Node.js, Express.js, MongoDB Atlas, Tailwind CSS, Vite, Render.
+
+**SSYV BhaktiSetu** - [Devotee Management Platform](#)
+*Dec 2025 -- Present*
+* Engineered an end-to-end devotee management and networking platform specifically for religious organizations.
+* Developed as a pro-bono (Seva) initiative by a core team of four, centralizing devotee data, automating mass communication, and matching community resources.
+* Configured self-hosting deployment via Docker to guarantee absolute data privacy and sovereignty for over 3,000 active members.
+* **Stack:** Next.js 15, React 19, Docker, Tailwind CSS 4, TypeScript.
 
 ## Certifications
 * [Exploratory Data Analysis for Machine Learning](https://coursera.org/share/1170199e7c965e9ca391e046b083a357) (IBM)

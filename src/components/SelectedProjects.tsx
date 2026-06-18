@@ -20,11 +20,13 @@ const projects = [
     link: "#",
     placeholder: "N",
     align: "right",
-    image: "/group-54.png",
+    image: "/group-53.png",
     isLogo: true,
     glowClass: "",
-    logoClass: "max-w-[460px] md:max-w-[540px] lg:max-w-[580px] aspect-[8/3]",
-    imgClass: "filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] group-hover/logo:drop-shadow-[0_15px_30px_rgba(59,130,246,0.2)]"
+    logoClass: "max-w-[260px] sm:max-w-[300px] aspect-square",
+    imgClass: "filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] group-hover/logo:drop-shadow-[0_15px_30px_rgba(59,130,246,0.2)]",
+    glowColor1: "rgb(59,130,246)",
+    glowColor2: "rgb(6,182,212)"
   },
   {
     id: "yatna",
@@ -38,7 +40,25 @@ const projects = [
     isLogo: true,
     glowClass: "",
     logoClass: "max-w-[260px] sm:max-w-[300px] aspect-square",
-    imgClass: "filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] group-hover/logo:drop-shadow-[0_15px_30px_rgba(239,68,68,0.2)]"
+    imgClass: "filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] group-hover/logo:drop-shadow-[0_15px_30px_rgba(239,68,68,0.2)]",
+    glowColor1: "rgb(239,68,68)",
+    glowColor2: "rgb(249,115,22)"
+  },
+  {
+    id: "bhaktisetu",
+    title: "SSYV BhaktiSetu",
+    description: "An end-to-end devotee management and networking platform engineered specifically for religious organizations. Developed as a pro-bono (Seva) initiative by a core team of four to centralize devotee data, automate mass communication, and dynamically match community resources. Entirely self-hosted via Docker to ensure absolute data privacy and sovereignty for over 3,000 active community members.",
+    tech: ["NEXT.JS 15", "REACT 19", "DOCKER", "TAILWIND 4", "TYPESCRIPT"],
+    link: "#",
+    placeholder: "B",
+    align: "right",
+    isLogo: true,
+    image: "/SSYV_BHAKTISETU.png",
+    glowClass: "",
+    logoClass: "max-w-[260px] sm:max-w-[300px] aspect-square",
+    imgClass: "filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] group-hover/logo:drop-shadow-[0_15px_30px_rgba(79,70,229,0.25)] rounded-[40px] overflow-hidden",
+    glowColor1: "rgb(79,70,229)",
+    glowColor2: "rgb(59,130,246)"
   }
 ];
 
@@ -122,11 +142,20 @@ function TiltLogo({ children, className = "max-w-[280px] sm:max-w-[320px] aspect
     
     x.set(mouseX);
     y.set(mouseY);
+
+    // Set CSS variables for cursor tracking
+    const px = ((e.clientX - rect.left) / width) * 100;
+    const py = ((e.clientY - rect.top) / height) * 100;
+    el.style.setProperty("--mouse-x", `${px}%`);
+    el.style.setProperty("--mouse-y", `${py}%`);
+    el.style.setProperty("--is-hovered", "1");
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
     x.set(0);
     y.set(0);
+    const el = e.currentTarget;
+    el.style.setProperty("--is-hovered", "0");
   };
 
   return (
@@ -137,7 +166,7 @@ function TiltLogo({ children, className = "max-w-[280px] sm:max-w-[320px] aspect
         rotateX,
         rotateY,
         transformStyle: "preserve-3d",
-        perspective: 1000
+        perspective: 1000,
       }}
       className={`relative group/logo w-full flex items-center justify-center transition-all duration-500 cursor-none z-30 ${className}`}
     >
@@ -267,13 +296,29 @@ export default function SelectedProjects() {
                     <TiltLogo className={project.logoClass}>
                       {/* Crystal Glass Background Card */}
                       <div className="absolute inset-0 bg-white/30 backdrop-blur-[20px] border border-white/60 shadow-[0_25px_50px_rgba(0,0,0,0.06)] pointer-events-none overflow-hidden rounded-3xl">
-                        {/* Glowing Liquid Blobs behind the glass content */}
+                        {/* Slowly Floating Ambient Liquid Blobs */}
                         <div className="absolute inset-0 -z-10 overflow-hidden">
-                          {/* Pulsing glow blob 1 */}
-                          <div className={`absolute -top-12 -left-12 w-44 h-44 rounded-full blur-[40px] opacity-[0.22] animate-pulse duration-[4000ms] ${project.id === 'netra' ? 'bg-blue-300' : 'bg-red-300'}`}></div>
-                          {/* Pulsing glow blob 2 */}
-                          <div className={`absolute -bottom-12 -right-12 w-44 h-44 rounded-full blur-[40px] opacity-[0.22] animate-pulse duration-[6000ms] ${project.id === 'netra' ? 'bg-cyan-300' : 'bg-orange-300'}`}></div>
+                          {/* Floating blob 1 */}
+                          <div 
+                            className="absolute -top-12 -left-12 w-44 h-44 rounded-full blur-[40px] opacity-[0.35] animate-float-1"
+                            style={{ backgroundColor: project.glowColor1 }}
+                          />
+                          {/* Floating blob 2 */}
+                          <div 
+                            className="absolute -bottom-12 -right-12 w-44 h-44 rounded-full blur-[40px] opacity-[0.3] animate-float-2"
+                            style={{ backgroundColor: project.glowColor2 }}
+                          />
                         </div>
+
+                        {/* Interactive Spotlight Glow (follows mouse cursor) */}
+                        <div 
+                          className="absolute inset-0 transition-opacity duration-300 pointer-events-none"
+                          style={{
+                            background: `radial-gradient(circle 180px at var(--mouse-x, 50%) var(--mouse-y, 50%), ${project.glowColor1} 0%, ${project.glowColor2} 50%, transparent 100%)`,
+                            opacity: `calc(var(--is-hovered, 0) * 0.45)`,
+                          }}
+                        />
+
                         {/* Glossy Reflection overlay */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-white/10" />
                         {/* Inner highlight border */}
@@ -281,7 +326,7 @@ export default function SelectedProjects() {
                       </div>
 
                       {/* Logo Image in the foreground */}
-                      <div style={{ transform: "translateZ(30px)" }} className={`relative z-10 w-full h-full flex items-center justify-center ${project.id === 'netra' ? 'p-4 sm:p-6' : 'p-8 sm:p-12'}`}>
+                      <div style={{ transform: "translateZ(30px)" }} className="relative z-10 w-full h-full flex items-center justify-center p-8 sm:p-12">
                         <img 
                           src={project.image} 
                           alt={project.title} 

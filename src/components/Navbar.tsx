@@ -61,11 +61,11 @@ export default function Navbar() {
           {/* Logo / Brand */}
           <Link href="/" className="flex items-center gap-3">
             <motion.div 
-              whileHover={{ rotate: 10, scale: 1.05 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-6 h-6 bg-[#1a233a] rounded-[4px] rotate-[-10deg] flex items-center justify-center shadow-md cursor-pointer"
+              className="w-6 h-6 flex items-center justify-center cursor-pointer"
             >
-              <div className="w-2 h-2 bg-white rounded-full"></div>
+              <img src="/chess.png" alt="chess" className="w-6 h-6 object-contain" />
             </motion.div>
             <span className="font-bold text-[13px] tracking-[0.2em] text-[#1a233a]">JAYRAJ PATEL</span>
           </Link>
@@ -76,7 +76,7 @@ export default function Navbar() {
               <Link href="/projects">PROJECTS <sup className="text-[8px] font-bold text-blue-500">3</sup></Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.95 }} className="hover:text-black transition-colors cursor-pointer">
-              <Link href="/#about">EXPERIENCE <sup className="text-[8px] font-bold text-blue-500">2</sup></Link>
+              <Link href="/#about">EXPERIENCE <sup className="text-[8px] font-bold text-blue-500">3</sup></Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.95 }} className="hover:text-black transition-colors cursor-pointer">
               <Link href="/contact">CONTACT</Link>
@@ -132,8 +132,8 @@ export default function Navbar() {
             {/* Header */}
             <div className="flex items-center justify-between h-20 px-2">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3">
-                <div className="w-6 h-6 bg-[#1a233a] rounded-[4px] rotate-[-10deg] flex items-center justify-center shadow-md">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <img src="/chess.png" alt="chess" className="w-6 h-6 object-contain" />
                 </div>
                 <span className="font-bold text-[13px] tracking-[0.2em] text-[#1a233a]">JAYRAJ PATEL</span>
               </Link>
@@ -174,7 +174,7 @@ export default function Navbar() {
                   className="hover:text-blue-500 transition-colors uppercase tracking-tight flex items-center justify-between"
                 >
                   <span>Experience</span>
-                  <span className="text-xs font-bold font-mono text-gray-300">/ 02</span>
+                  <span className="text-xs font-bold font-mono text-gray-300">/ 03</span>
                 </Link>
               </motion.div>
 

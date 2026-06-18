@@ -160,8 +160,8 @@ function DynamicDraggableBox({
 
       <div 
         className={cn(
-          "figma-box relative flex pointer-events-auto border transition-colors duration-300 w-full h-full",
-          isSelected ? "border-[#3b82f6]" : "border-transparent group-hover:border-black/10"
+          "relative flex pointer-events-auto transition-colors duration-300 w-full h-full",
+          isSelected ? "figma-box border-[#3b82f6]" : ""
         )}
       >
         {isSelected && (
@@ -229,6 +229,7 @@ export default function Hero() {
   const [isPixelFont, setIsPixelFont] = useState(true);
   const { isFancyFont, setIsFancyFont } = useSearch();
   const [activeBoxId, setActiveBoxId] = useState("title");
+  const previousActiveBoxId = useRef("title");
   const [isScrollInHero, setIsScrollInHero] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -329,6 +330,12 @@ export default function Hero() {
     surname: true
   });
 
+  useEffect(() => {
+    if (activeBoxId && !activeBoxId.startsWith("bot-") && visibleBoxes[activeBoxId as keyof typeof visibleBoxes] !== false) {
+      previousActiveBoxId.current = activeBoxId;
+    }
+  }, [activeBoxId, visibleBoxes]);
+
   // Motion values for static elements
   const titleX = useMotionValue(0); const titleY = useMotionValue(0);
   const summaryX = useMotionValue(0); const summaryY = useMotionValue(0);
@@ -364,7 +371,87 @@ export default function Hero() {
     surname: { x: surnameX, y: surnameY, width: surnameResize.width, height: surnameResize.height, ref: surnameResize.ref, startResize: surnameResize.startResize }
   };
 
-  const lastInteractionTime = useRef(Date.now());
+  const lastInteractionTime = useRef(Date.now() - 3000);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const initialSizes = useRef<Record<string, { width: number; height: number }>>({});
+
+  // Caching initial layout sizes of Name, Surname, and Summary
+  useEffect(() => {
+    const measureInitialSizes = () => {
+      // Temporarily clear overrides to measure native sizes
+      titleResize.width.set(undefined); titleResize.height.set(undefined);
+      surnameResize.width.set(undefined); surnameResize.height.set(undefined);
+      summaryResize.width.set(undefined); summaryResize.height.set(undefined);
+
+      setTimeout(() => {
+        const titleEl = document.getElementById("title");
+        const surnameEl = document.getElementById("surname");
+        const summaryEl = document.getElementById("summary");
+        if (titleEl) {
+          const r = titleEl.getBoundingClientRect();
+          initialSizes.current.title = { width: r.width, height: r.height };
+        }
+        if (surnameEl) {
+          const r = surnameEl.getBoundingClientRect();
+          initialSizes.current.surname = { width: r.width, height: r.height };
+        }
+        if (summaryEl) {
+          const r = summaryEl.getBoundingClientRect();
+          initialSizes.current.summary = { width: r.width, height: r.height };
+        }
+      }, 100);
+    };
+
+    measureInitialSizes();
+    window.addEventListener("resize", measureInitialSizes);
+    return () => window.removeEventListener("resize", measureInitialSizes);
+  }, []);
+
+  // Track user mouse move relative to section canvas for radial gradient glow
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = section.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      section.style.setProperty("--user-x", `${x}px`);
+      section.style.setProperty("--user-y", `${y}px`);
+      section.style.setProperty("--user-active", "1");
+    };
+
+    const handleMouseLeave = () => {
+      section.style.setProperty("--user-active", "0");
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseleave", handleMouseLeave);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
+
+  // Track bot cursor coordinates for dynamic bot glow effect
+  useEffect(() => {
+    let frameId: number;
+    const updateBotGlow = () => {
+      const section = sectionRef.current;
+      const botEl = document.getElementById("bot-cursor");
+      if (section && botEl) {
+        const rect = botEl.getBoundingClientRect();
+        const sectionRect = section.getBoundingClientRect();
+        const x = rect.left - sectionRect.left + 12;
+        const y = rect.top - sectionRect.top + 12;
+        section.style.setProperty("--bot-x", `${x}px`);
+        section.style.setProperty("--bot-y", `${y}px`);
+      }
+      frameId = requestAnimationFrame(updateBotGlow);
+    };
+    frameId = requestAnimationFrame(updateBotGlow);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
 
   const dynamicElementsRef = useRef(dynamicElements);
   useEffect(() => {
@@ -375,6 +462,21 @@ export default function Hero() {
   useEffect(() => {
     visibleBoxesRef.current = visibleBoxes;
   }, [visibleBoxes]);
+
+  const activeBoxIdRef = useRef(activeBoxId);
+  useEffect(() => {
+    activeBoxIdRef.current = activeBoxId;
+  }, [activeBoxId]);
+
+  const isFancyFontRef = useRef(isFancyFont);
+  useEffect(() => {
+    isFancyFontRef.current = isFancyFont;
+  }, [isFancyFont]);
+
+  const isPixelFontRef = useRef(isPixelFont);
+  useEffect(() => {
+    isPixelFontRef.current = isPixelFont;
+  }, [isPixelFont]);
 
   useEffect(() => {
     // Force scroll to top on load and prevent browser scroll restoration from messing with landing
@@ -399,32 +501,86 @@ export default function Hero() {
     console.log("Bot action loop useEffect initialized");
     const idleTimer = setInterval(() => {
       const idleTime = Date.now() - lastInteractionTime.current;
-      if (idleTime > 3500 && !isBotBusy.current) {
+      if (idleTime > 2000 && !isBotBusy.current) {
         console.log("Idle threshold exceeded. Starting bot action...", { idleTime, isBusy: isBotBusy.current });
         setBotBusy(true);
 
-        // Helper: smooth human-like cursor fly
-        const flyTo = (x: number, y: number, duration = 0.5) =>
-          botControls.start({ x, y, opacity: 1, scale: 1, transition: { duration, ease: [0.16, 1, 0.3, 1] } });
+        const checkAbort = () => {
+          if (Date.now() - lastInteractionTime.current < 2000) {
+            throw "abort";
+          }
+        };
+
+        // Helper: smooth human-like cursor fly along a Bezier curve path
+        const flyTo = async (targetX: number, targetY: number, duration = 0.3) => {
+          checkAbort();
+          
+          let currentX = 400;
+          let currentY = 200;
+          const botEl = document.getElementById("bot-cursor");
+          if (botEl) {
+            const rect = botEl.getBoundingClientRect();
+            currentX = rect.left;
+            currentY = rect.top;
+          }
+
+          const dx = targetX - currentX;
+          const dy = targetY - currentY;
+          const distance = Math.hypot(dx, dy);
+
+          if (distance < 15) {
+            await botControls.start({ x: targetX, y: targetY, opacity: 1, scale: 1, transition: { duration: 0.1 } });
+            return;
+          }
+
+          // Perpendicular offset for curved motion
+          const perpX = -dy / distance;
+          const perpY = dx / distance;
+          const curvature = (Math.random() - 0.5) * 0.16 * distance; // curvature height scales with distance
+          const midX = currentX + dx / 2 + perpX * curvature;
+          const midY = currentY + dy / 2 + perpY * curvature;
+
+          // Build Bezier curve coordinates list (12 interpolation points)
+          const steps = 12;
+          const pathX = [];
+          const pathY = [];
+          for (let i = 1; i <= steps; i++) {
+            const t = i / steps;
+            const px = (1 - t) * (1 - t) * currentX + 2 * (1 - t) * t * midX + t * t * targetX;
+            const py = (1 - t) * (1 - t) * currentY + 2 * (1 - t) * t * midY + t * t * targetY;
+            pathX.push(px);
+            pathY.push(py);
+          }
+
+          // Realistic movement speed: noticeably slower travel
+          const finalDuration = Math.max(0.5, Math.min(1.2, distance / 400));
+
+          await botControls.start({
+            x: pathX,
+            y: pathY,
+            opacity: 1,
+            scale: 1,
+            transition: { duration: finalDuration, ease: "easeOut" }
+          });
+        };
 
         // Helper: click animation with click coordinates for ripples
         const click = async (cx?: number, cy?: number) => {
+          checkAbort();
           if (cx !== undefined && cy !== undefined) {
             triggerRipple(cx, cy, "#ff4e40");
           }
           await botControls.start({ scale: 0.8, transition: { duration: 0.08 } });
+          checkAbort();
           await botControls.start({ scale: 1, transition: { duration: 0.08 } });
         };
 
         // Helper: fly away
         const flyAway = async (fromX: number, fromY: number) => {
-          await botControls.start({
-            x: fromX + (Math.random() - 0.5) * 160,
-            y: fromY + (Math.random() - 0.5) * 120,
-            opacity: 1,
-            scale: 1,
-            transition: { duration: 0.5, ease: "easeOut" }
-          });
+          checkAbort();
+          const targetX = fromX + (Math.random() - 0.5) * 160;
+          const targetY = fromY + (Math.random() - 0.5) * 120;
+          await flyTo(targetX, targetY, 0.3);
         };
 
         // Helper: typing vibration (removed vibration for cursor stability)
@@ -432,188 +588,122 @@ export default function Hero() {
 
         // ===== ACTION: Type a sentence =====
         const actionType = async () => {
+          checkAbort();
           const isMobile = window.innerWidth < 768;
-          const existingBox = isMobile 
-            ? dynamicElementsRef.current.find((el: any) => el.type === 'type' && el.id.startsWith('bot-'))
-            : null;
 
-          if (existingBox) {
-            let bx = existingBox.x;
-            let by = existingBox.y;
-            const ic = document.getElementById("inner-canvas");
-            if (ic) { 
-              const r = ic.getBoundingClientRect(); 
-              bx = r.left + existingBox.x; 
-              by = r.top + existingBox.y; 
-            }
-            const elDom = document.getElementById(existingBox.id);
-            if (elDom) {
-              const rect = elDom.getBoundingClientRect();
-              bx = rect.left + rect.width / 2;
-              by = rect.top + rect.height / 2;
-            }
-
-            await flyTo(bx, by, 0.4);
-            await click(bx, by);
-            setActiveBoxId(existingBox.id);
-            await new Promise(r => setTimeout(r, 150));
-
-            // Erase the text one by one
-            let text = existingBox.text || "";
-            while (text.length > 0) {
-              text = text.substring(0, text.length - 1);
-              setDynamicElements(prev => prev.map(el => el.id === existingBox.id ? { ...el, text } : el));
-              await new Promise(r => setTimeout(r, 10 + Math.random() * 10));
-            }
-
-            // Write the new sentence
-            const msg = ABOUT_ME_SENTENCES[sentenceIndex.current % ABOUT_ME_SENTENCES.length];
-            sentenceIndex.current++;
-            for (let i = 0; i < msg.length; i++) {
-              text += msg[i];
-              setDynamicElements(prev => prev.map(el => el.id === existingBox.id ? { ...el, text } : el));
-              await new Promise(r => setTimeout(r, 15 + Math.random() * 10));
-            }
-            await new Promise(r => setTimeout(r, 300));
-            
-            // Deselect
-            setActiveBoxId("");
-            await new Promise(r => setTimeout(r, 200));
-            await flyAway(bx, by);
-            return;
-          }
-
-          const btn = document.getElementById("tool-type");
-          let tx = 40, ty = window.innerHeight / 2 - 20;
-          if (btn) {
-            const rect = btn.getBoundingClientRect();
-            tx = rect.left + rect.width / 2;
-            ty = rect.top + rect.height / 2;
-          }
-          await flyTo(tx, ty, 0.4);
-          await click(tx, ty);
-          setActiveTool("type"); // Select the tool visually!
-          await new Promise(r => setTimeout(r, 150));
-
-          // Try to find a non-overlapping spawn point for typing
-          const existingCount = document.querySelectorAll('.dynamic-box').length;
-          let canvasX = 50 + Math.random() * 150;
-          let canvasY = 420 + (existingCount * 60);
-
+          // Try to find a completely randomized, non-overlapping spawn point for typing
+          let canvasX = 50;
+          let canvasY = 320;
           let attempts = 0;
-          while (attempts < 15) {
-            let overlaps = false;
+          
+          while (attempts < 30) {
+            if (isMobile) {
+              canvasX = 20 + Math.random() * 120;
+              canvasY = 320 + Math.random() * 120;
+            } else {
+              canvasX = 50 + Math.random() * 950;
+              canvasY = 50 + Math.random() * 450;
+            }
+            
+            // Bounding box overlaps check helper
+            const overlaps = (x1: number, y1: number, w1: number, h1: number, x2: number, y2: number, w2: number, h2: number) => {
+              return !(x1 + w1 < x2 || x1 > x2 + w2 || y1 + h1 < y2 || y1 > y2 + h2);
+            };
+
+            const overlapsTitle = !isMobile && overlaps(canvasX, canvasY, 320, 90, 360, 48, 400, 160);
+            const overlapsSurname = !isMobile && overlaps(canvasX, canvasY, 320, 90, 760, 80, 350, 140);
+            const overlapsSummary = !isMobile && overlaps(canvasX, canvasY, 320, 90, 360, 240, 680, 120);
+            
+            // Also check overlap with existing dynamic elements
+            let overlapsDynamic = false;
             for (const el of dynamicElementsRef.current) {
-              const dx = Math.abs(el.x - canvasX);
-              const dy = Math.abs(el.y - canvasY);
-              if (dx < 120 && dy < 50) {
-                overlaps = true;
+              if (overlaps(canvasX, canvasY, 320, 90, el.x, el.y, el.width ?? 320, el.height ?? 90)) {
+                overlapsDynamic = true;
                 break;
               }
             }
-            if (!overlaps) break;
-            canvasX = 50 + Math.random() * 150;
-            canvasY = 420 + (existingCount * 60) + (Math.random() - 0.5) * 20;
+            
+            if (!overlapsTitle && !overlapsSurname && !overlapsSummary && !overlapsDynamic) {
+              break;
+            }
             attempts++;
           }
 
           let bx = canvasX, by = canvasY;
           const ic = document.getElementById("inner-canvas");
-          if (ic) { const r = ic.getBoundingClientRect(); bx = r.left + canvasX; by = r.top + canvasY; }
+          if (ic) { 
+            const r = ic.getBoundingClientRect(); 
+            bx = r.left + canvasX; 
+            by = r.top + canvasY; 
+          }
 
-          await flyTo(bx, by, 0.4);
+          // Fly directly to canvas spawn coordinates
+          await flyTo(bx, by, 0.25);
+          checkAbort();
           await click(bx, by);
 
           const boxId = `bot-${Date.now()}`;
           const randomTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
-          setDynamicElements(prev => [...prev, { id: boxId, type: 'type', x: canvasX, y: canvasY, width: 20, height: 20, text: "", theme: randomTheme }]);
-
-          // Drag outward to draw the box size visually
-          const finalW = 160 + Math.floor(Math.random() * 40);
-          const finalH = 50;
           
-          await Promise.all([
-            botControls.start({
-              x: bx + finalW,
-              y: by + finalH,
-              transition: { duration: 0.5, ease: "easeOut" }
-            }),
-            (async () => {
-              const steps = 15;
-              for (let i = 1; i <= steps; i++) {
-                const ratio = i / steps;
-                const w = 20 + (finalW - 20) * ratio;
-                const h = 20 + (finalH - 20) * ratio;
-                setDynamicElements(prev => prev.map(el => el.id === boxId ? { ...el, width: w, height: h } : el));
-                await new Promise(r => setTimeout(r, 20));
-              }
-            })()
-          ]);
+          // Spawn with full width and height immediately to save time!
+          setDynamicElements(prev => [...prev, { 
+            id: boxId, 
+            type: 'type', 
+            x: canvasX, 
+            y: canvasY, 
+            width: 320, 
+            height: 90, 
+            text: "", 
+            theme: randomTheme 
+          }]);
 
-          // Select cursor tool back
-          setActiveTool("cursor");
-          await new Promise(r => setTimeout(r, 100));
-          
-          // Click to focus and select the box
-          await flyTo(bx + 40, by + 20, 0.3);
-          await click(bx + 40, by + 20);
+          // Fly inside the box to select it
+          await flyTo(bx + 40, by + 25, 0.2);
+          checkAbort();
+          await click(bx + 40, by + 25);
           setActiveBoxId(boxId);
-          await new Promise(r => setTimeout(r, 150));
+          await new Promise(r => setTimeout(r, 100));
+          checkAbort();
 
           const msg = ABOUT_ME_SENTENCES[sentenceIndex.current % ABOUT_ME_SENTENCES.length];
           sentenceIndex.current++;
+          
           let text = "";
           for (let i = 0; i < msg.length; i++) {
+            checkAbort();
             text += msg[i];
             setDynamicElements(prev => prev.map(el => el.id === boxId ? { ...el, text } : el));
-            await new Promise(r => setTimeout(r, 15 + Math.random() * 10));
+            await new Promise(r => setTimeout(r, 45 + Math.random() * 20)); // slowed down by ~70% (like a natural typed stream)
           }
-          await new Promise(r => setTimeout(r, 300));
-
-          // Drag the bottom-right corner handle to resize the box to fit the long text
-          let cornerX = bx + finalW;
-          let cornerY = by + finalH;
-
-          const el = document.getElementById(boxId);
-          if (el) {
-            const brHandle = el.querySelector(".figma-handle-br");
-            if (brHandle) {
-              const handleRect = brHandle.getBoundingClientRect();
-              cornerX = handleRect.left + handleRect.width / 2;
-              cornerY = handleRect.top + handleRect.height / 2;
-            }
+          
+          // Wait 4.5s for user to read it (70% slower read delay before deletion)
+          for (let i = 0; i < 45; i++) {
+            await new Promise(r => setTimeout(r, 100));
+            checkAbort();
           }
 
-          // Fly to the bottom-right corner handle
-          await flyTo(cornerX, cornerY, 0.4);
-          await click(cornerX, cornerY);
-          await new Promise(r => setTimeout(r, 150));
+          // Fly to trash icon of this box and click it
+          let trashX = bx + 320 - 10;
+          let trashY = by - 24;
+          
+          const trashBtn = document.getElementById(`trash-${boxId}`);
+          if (trashBtn) {
+            const trashRect = trashBtn.getBoundingClientRect();
+            trashX = trashRect.left + trashRect.width / 2;
+            trashY = trashRect.top + trashRect.height / 2;
+          }
 
-          // Drag the corner out to make the text box wider and taller so the text is fully visible
-          const stretchW = finalW + 150;
-          const stretchH = finalH + 35;
-          await Promise.all([
-            botControls.start({
-              x: cornerX + 150,
-              y: cornerY + 35,
-              transition: { duration: 0.6, ease: "easeInOut" }
-            }),
-            (async () => {
-              const steps = 15;
-              for (let i = 1; i <= steps; i++) {
-                const ratio = i / steps;
-                const w = finalW + 150 * ratio;
-                const h = finalH + 35 * ratio;
-                setDynamicElements(prev => prev.map(item => item.id === boxId ? { ...item, width: w, height: h } : item));
-                await new Promise(r => setTimeout(r, 25));
-              }
-            })()
-          ]);
+          await flyTo(trashX, trashY, 0.2);
+          checkAbort();
+          await click(trashX, trashY);
 
-          // Deselect the box
-          setActiveBoxId("");
-          await new Promise(r => setTimeout(r, 200));
-          await flyAway(cornerX + 150, cornerY + 35);
+          // Delete from state
+          setDynamicElements(prev => prev.filter(el => el.id !== boxId));
+          setActiveBoxId(previousActiveBoxId.current);
+          
+          await new Promise(r => setTimeout(r, 100));
+          checkAbort();
+          await flyAway(trashX, trashY);
         };
 
         // ===== ACTION: Rearrange a static box =====
@@ -628,157 +718,34 @@ export default function Hero() {
           const cx = rect.left + rect.width / 2;
           const cy = rect.top + rect.height / 2;
 
-          await flyTo(cx, cy, 0.5);
+          await flyTo(cx, cy, 0.3);
+          await flyTo(cx, cy, 0.4);
           await click(cx, cy);
+          setActiveBoxId(boxId); // Activate border on rearranged element
 
           // Capture current position before drag starts
           const startX = box.x.get();
           const startY = box.y.get();
-
-          // Drag it a small amount
+          
+          // Drag it a small amount (slower travel)
           const dx = (Math.random() - 0.5) * 120;
           const dy = (Math.random() - 0.5) * 80;
           await Promise.all([
-            animate(box.x, startX + dx, { duration: 0.6, ease: "easeInOut" }),
-            animate(box.y, startY + dy, { duration: 0.6, ease: "easeInOut" }),
-            botControls.start({ x: cx + dx, y: cy + dy, transition: { duration: 0.6, ease: "easeInOut" } })
+            animate(box.x, startX + dx, { duration: 1.0, ease: "easeInOut" }),
+            animate(box.y, startY + dy, { duration: 1.0, ease: "easeInOut" }),
+            botControls.start({ x: cx + dx, y: cy + dy, transition: { duration: 1.0, ease: "easeInOut" } })
           ]);
 
           // Pause, then drag it back to start position
           await new Promise(r => setTimeout(r, 200));
           await Promise.all([
-            animate(box.x, startX, { duration: 0.6, ease: "easeInOut" }),
-            animate(box.y, startY, { duration: 0.6, ease: "easeInOut" }),
-            botControls.start({ x: cx, y: cy, transition: { duration: 0.6, ease: "easeInOut" } })
+            animate(box.x, startX, { duration: 1.0, ease: "easeInOut" }),
+            animate(box.y, startY, { duration: 1.0, ease: "easeInOut" }),
+            botControls.start({ x: cx, y: cy, transition: { duration: 1.0, ease: "easeInOut" } })
           ]);
 
           await flyAway(cx, cy);
-        };
-
-        // ===== ACTION: Spawn a shape =====
-        const actionShape = async () => {
-          const isMobile = window.innerWidth < 768;
-          const existingShape = isMobile 
-            ? dynamicElementsRef.current.find((el: any) => el.type === 'shape' && el.id.startsWith('bot-'))
-            : null;
-
-          if (existingShape) {
-            let bx = existingShape.x;
-            let by = existingShape.y;
-            const ic = document.getElementById("inner-canvas");
-            if (ic) { 
-              const r = ic.getBoundingClientRect(); 
-              bx = r.left + existingShape.x; 
-              by = r.top + existingShape.y; 
-            }
-            const elDom = document.getElementById(existingShape.id);
-            if (elDom) {
-              const rect = elDom.getBoundingClientRect();
-              bx = rect.left + rect.width / 2;
-              by = rect.top + rect.height / 2;
-            }
-
-            await flyTo(bx, by, 0.4);
-            await click(bx, by);
-            setActiveBoxId(existingShape.id);
-            await new Promise(r => setTimeout(r, 150));
-
-            // Select a new theme/color
-            const randomTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
-            setDynamicElements(prev => prev.map(el => el.id === existingShape.id ? { ...el, theme: randomTheme } : el));
-            
-            // Resize it slightly
-            const origW = existingShape.width || 100;
-            const origH = existingShape.height || 100;
-            const newW = origW === 100 ? 140 : 100;
-            const newH = origH === 100 ? 140 : 100;
-
-            const steps = 15;
-            for (let i = 1; i <= steps; i++) {
-              const ratio = i / steps;
-              const w = origW + (newW - origW) * ratio;
-              const h = origH + (newH - origH) * ratio;
-              setDynamicElements(prev => prev.map(el => el.id === existingShape.id ? { ...el, width: w, height: h } : el));
-              await new Promise(r => setTimeout(r, 20));
-            }
-
-            // Deselect
-            setActiveBoxId("");
-            await new Promise(r => setTimeout(r, 200));
-            await flyAway(bx, by);
-            return;
-          }
-
-          const btn = document.getElementById("tool-shape");
-          let tx = 40, ty = window.innerHeight / 2 + 30;
-          if (btn) {
-            const rect = btn.getBoundingClientRect();
-            tx = rect.left + rect.width / 2;
-            ty = rect.top + rect.height / 2;
-          }
-          await flyTo(tx, ty, 0.4);
-          await click(tx, ty);
-          setActiveTool("shape"); // Select the tool visually!
-          await new Promise(r => setTimeout(r, 150));
-
-          // Try to find a non-overlapping spawn point for shape
-          let canvasX = 600 + Math.random() * 200;
-          let canvasY = 420 + Math.random() * 100;
-
-          let attempts = 0;
-          while (attempts < 15) {
-            let overlaps = false;
-            for (const el of dynamicElementsRef.current) {
-              const dx = Math.abs(el.x - canvasX);
-              const dy = Math.abs(el.y - canvasY);
-              if (dx < 100 && dy < 100) {
-                overlaps = true;
-                break;
-              }
-            }
-            if (!overlaps) break;
-            canvasX = 600 + Math.random() * 200;
-            canvasY = 420 + Math.random() * 100;
-            attempts++;
-          }
-
-          let bx = canvasX, by = canvasY;
-          const ic = document.getElementById("inner-canvas");
-          if (ic) { const r = ic.getBoundingClientRect(); bx = r.left + canvasX; by = r.top + canvasY; }
-
-          await flyTo(bx, by, 0.4);
-          await click(bx, by);
-
-          const boxId = `bot-shape-${Date.now()}`;
-          const randomTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
-          setDynamicElements(prev => [...prev, { id: boxId, type: 'shape', x: canvasX, y: canvasY, width: 20, height: 20, theme: randomTheme }]);
-
-          // Drag outward to draw the shape size visually
-          const finalW = 100 + Math.floor(Math.random() * 60);
-          const finalH = 100 + Math.floor(Math.random() * 60);
-          
-          await Promise.all([
-            botControls.start({
-              x: bx + finalW,
-              y: by + finalH,
-              transition: { duration: 0.5, ease: "easeOut" }
-            }),
-            (async () => {
-              const steps = 15;
-              for (let i = 1; i <= steps; i++) {
-                const ratio = i / steps;
-                const w = 20 + (finalW - 20) * ratio;
-                const h = 20 + (finalH - 20) * ratio;
-                setDynamicElements(prev => prev.map(el => el.id === boxId ? { ...el, width: w, height: h } : el));
-                await new Promise(r => setTimeout(r, 20));
-              }
-            })()
-          ]);
-
-          // Select cursor tool back
-          setActiveTool("cursor");
-          await new Promise(r => setTimeout(r, 100));
-          await flyAway(bx + finalW, by + finalH);
+          setActiveBoxId(previousActiveBoxId.current);
         };
 
         // ===== ACTION: Delete a dynamic element =====
@@ -808,12 +775,12 @@ export default function Hero() {
           }
 
           // Fly to roughly the center of the box to select it
-          await flyTo(bx, by, 0.5);
+          await flyTo(bx, by, 0.4);
           await click(bx, by);
           
           // Select it in state
           setActiveBoxId(target.id);
-          await new Promise(r => setTimeout(r, 150)); // wait for trash button to render in DOM
+          await new Promise(r => setTimeout(r, 100)); // wait for trash button to render in DOM
 
           // 2. Find the trash button coordinate
           let trashX = bx + 80; // fallback default
@@ -828,12 +795,12 @@ export default function Hero() {
           }
 
           // 3. Fly to the trash button and click it
-          await flyTo(trashX, trashY, 0.4);
+          await flyTo(trashX, trashY, 0.3);
           await click(trashX, trashY);
 
           // 4. Delete the element from state
           setDynamicElements(prev => prev.filter(el => el.id !== target.id));
-          setActiveBoxId("");
+          setActiveBoxId(previousActiveBoxId.current);
           
           await new Promise(r => setTimeout(r, 100));
           await flyAway(trashX, trashY);
@@ -844,136 +811,64 @@ export default function Hero() {
           setActiveTool("cursor");
           await new Promise(r => setTimeout(r, 100));
 
-          // Randomly choose to resize a static box or a bot dynamic shape
-          const botShapes = dynamicElementsRef.current.filter((el: any) => el.id.startsWith('bot-'));
-          const useDynamic = botShapes.length > 0 && Math.random() > 0.5;
+          // Resize static box
+          const ids = Object.keys(boxes).filter(id => visibleBoxesRef.current[id as keyof typeof visibleBoxes]);
+          if (ids.length === 0) { setBotBusy(false); return; }
+          const boxId = ids[Math.floor(Math.random() * ids.length)];
+          const box = boxes[boxId];
+          if (!box.ref.current) { setBotBusy(false); return; }
 
-          if (useDynamic) {
-            const target = botShapes[Math.floor(Math.random() * botShapes.length)];
-            const el = document.getElementById(target.id);
-            if (!el) { setBotBusy(false); return; }
+          const origW = box.width.get();
+          const origH = box.height.get();
 
-            const rect = el.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
+          const rect = box.ref.current.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
 
-            // Click the dynamic shape to select it and show handles
-            await flyTo(cx, cy, 0.4);
-            await click(cx, cy);
-            setActiveBoxId(target.id);
-            await new Promise(r => setTimeout(r, 150));
+          // Select static box first
+          await flyTo(cx, cy, 0.4);
+          await click(cx, cy);
+          setActiveBoxId(boxId);
+          await new Promise(r => setTimeout(r, 100));
 
-            // Get bottom-right corner position
-            const updatedRect = el.getBoundingClientRect();
-            const cornerX = updatedRect.right;
-            const cornerY = updatedRect.bottom;
+          // Corner coordinates
+          const updatedRect = box.ref.current.getBoundingClientRect();
+          const cornerX = updatedRect.right;
+          const cornerY = updatedRect.bottom;
 
-            await flyTo(cornerX, cornerY, 0.4);
-            await click(cornerX, cornerY);
+          await flyTo(cornerX, cornerY, 0.4);
+          await click(cornerX, cornerY);
 
-            // Drag the corner out
-            const stretchW = updatedRect.width + 40 + Math.random() * 40;
-            const stretchH = updatedRect.height + 20 + Math.random() * 20;
+          // Lock dimensions
+          box.width.set(updatedRect.width);
+          box.height.set(updatedRect.height);
+          
+          // "Drag" the corner out (slower stretch)
+          const stretchW = updatedRect.width + 40 + Math.random() * 30;
+          const stretchH = updatedRect.height + 20 + Math.random() * 20;
+          await Promise.all([
+            animate(box.width, stretchW, { duration: 1.0, ease: "easeInOut" }),
+            animate(box.height, stretchH, { duration: 1.0, ease: "easeInOut" }),
+            botControls.start({ x: cornerX + (stretchW - updatedRect.width), y: cornerY + (stretchH - updatedRect.height), transition: { duration: 1.0, ease: "easeInOut" } })
+          ]);
 
-            await Promise.all([
-              botControls.start({
-                x: cornerX + (stretchW - updatedRect.width),
-                y: cornerY + (stretchH - updatedRect.height),
-                transition: { duration: 0.6, ease: "easeInOut" }
-              }),
-              (async () => {
-                const steps = 15;
-                for (let i = 1; i <= steps; i++) {
-                  const ratio = i / steps;
-                  const w = updatedRect.width + (stretchW - updatedRect.width) * ratio;
-                  const h = updatedRect.height + (stretchH - updatedRect.height) * ratio;
-                  setDynamicElements(prev => prev.map(el => el.id === target.id ? { ...el, width: w, height: h } : el));
-                  await new Promise(r => setTimeout(r, 25));
-                }
-              })()
-            ]);
+          // Pause and "think"
+          await new Promise(r => setTimeout(r, 200));
 
-            // Drag it back
-            await new Promise(r => setTimeout(r, 200));
+          // "Drag" it back to original pixel dimension or original value
+          const targetW = typeof origW === "number" ? origW : updatedRect.width;
+          const targetH = typeof origH === "number" ? origH : updatedRect.height;
 
-            await Promise.all([
-              botControls.start({
-                x: cornerX,
-                y: cornerY,
-                transition: { duration: 0.6, ease: "easeInOut" }
-              }),
-              (async () => {
-                const steps = 15;
-                for (let i = 1; i <= steps; i++) {
-                  const ratio = i / steps;
-                  const w = stretchW - (stretchW - updatedRect.width) * ratio;
-                  const h = stretchH - (stretchH - updatedRect.height) * ratio;
-                  setDynamicElements(prev => prev.map(el => el.id === target.id ? { ...el, width: w, height: h } : el));
-                  await new Promise(r => setTimeout(r, 25));
-                }
-              })()
-            ]);
+          await Promise.all([
+            animate(box.width, targetW, { duration: 1.0, ease: "easeInOut" }),
+            animate(box.height, targetH, { duration: 1.0, ease: "easeInOut" }),
+            botControls.start({ x: cornerX, y: cornerY, transition: { duration: 1.0, ease: "easeInOut" } })
+          ]);
 
-            await flyAway(cornerX, cornerY);
-          } else {
-            // Resize static box
-            const ids = Object.keys(boxes).filter(id => visibleBoxesRef.current[id as keyof typeof visibleBoxes]);
-            if (ids.length === 0) { setBotBusy(false); return; }
-            const boxId = ids[Math.floor(Math.random() * ids.length)];
-            const box = boxes[boxId];
-            if (!box.ref.current) { setBotBusy(false); return; }
-
-            const origW = box.width.get();
-            const origH = box.height.get();
-
-            const rect = box.ref.current.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-
-            // Select static box first
-            await flyTo(cx, cy, 0.4);
-            await click(cx, cy);
-            setActiveBoxId(boxId);
-            await new Promise(r => setTimeout(r, 150));
-
-            // Corner coordinates
-            const updatedRect = box.ref.current.getBoundingClientRect();
-            const cornerX = updatedRect.right;
-            const cornerY = updatedRect.bottom;
-
-            await flyTo(cornerX, cornerY, 0.4);
-            await click(cornerX, cornerY);
-
-            // Lock dimensions
-            box.width.set(updatedRect.width);
-            box.height.set(updatedRect.height);
-
-            // "Drag" the corner out
-            const stretchW = updatedRect.width + 40 + Math.random() * 30;
-            const stretchH = updatedRect.height + 20 + Math.random() * 20;
-            await Promise.all([
-              animate(box.width, stretchW, { duration: 0.6, ease: "easeInOut" }),
-              animate(box.height, stretchH, { duration: 0.6, ease: "easeInOut" }),
-              botControls.start({ x: cornerX + (stretchW - updatedRect.width), y: cornerY + (stretchH - updatedRect.height), transition: { duration: 0.6, ease: "easeInOut" } })
-            ]);
-
-            // Pause and "think"
-            await new Promise(r => setTimeout(r, 200));
-
-            // "Drag" it back to original pixel dimension or original value
-            const targetW = typeof origW === "number" ? origW : updatedRect.width;
-            const targetH = typeof origH === "number" ? origH : updatedRect.height;
-
-            await Promise.all([
-              animate(box.width, targetW, { duration: 0.6, ease: "easeInOut" }),
-              animate(box.height, targetH, { duration: 0.6, ease: "easeInOut" }),
-              botControls.start({ x: cornerX, y: cornerY, transition: { duration: 0.6, ease: "easeInOut" } })
-            ]);
-
-            box.width.set(origW);
-            box.height.set(origH);
-            await flyAway(cornerX, cornerY);
-          }
+          box.width.set(origW);
+          box.height.set(origH);
+          setActiveBoxId(previousActiveBoxId.current);
+          await flyAway(cornerX, cornerY);
         };
 
         // ===== ACTION: Correct main elements' position/size sequentially =====
@@ -1000,7 +895,7 @@ export default function Hero() {
               await flyTo(cx, cy, 0.4);
               await click(cx, cy);
               setActiveBoxId(boxId);
-              await new Promise(r => setTimeout(r, 150));
+              await new Promise(r => setTimeout(r, 100));
 
               // Start guides tracking
               const trackInterval = setInterval(() => {
@@ -1020,20 +915,20 @@ export default function Hero() {
               const origCx = cx - box.x.get();
               const origCy = cy - box.y.get();
 
-              // Drag back to base layout position
+              // Drag back to base layout position (slower correction - 0.9s)
               await Promise.all([
-                animate(box.x, 0, { duration: 0.6, ease: "easeInOut" }),
-                animate(box.y, 0, { duration: 0.6, ease: "easeInOut" }),
+                animate(box.x, 0, { duration: 0.9, ease: "easeInOut" }),
+                animate(box.y, 0, { duration: 0.9, ease: "easeInOut" }),
                 botControls.start({
                   x: origCx,
                   y: origCy,
-                  transition: { duration: 0.6, ease: "easeInOut" }
+                  transition: { duration: 0.9, ease: "easeInOut" }
                 })
               ]);
 
               clearInterval(trackInterval);
               setDragCenter(null);
-              await new Promise(r => setTimeout(r, 150));
+              await new Promise(r => setTimeout(r, 100));
             }
 
             // 2. Correct size if resized
@@ -1042,16 +937,9 @@ export default function Hero() {
               const currentW = box.width.get();
               const currentH = box.height.get();
               
-              // Measure auto bounds
-              const origStyleW = el.style.width;
-              const origStyleH = el.style.height;
-              el.style.width = "auto";
-              el.style.height = "auto";
-              const autoRect = el.getBoundingClientRect();
-              const autoW = autoRect.width;
-              const autoH = autoRect.height;
-              el.style.width = origStyleW;
-              el.style.height = origStyleH;
+              // Get the cached initial sizes!
+              const targetW = initialSizes.current[boxId]?.width ?? rect.width;
+              const targetH = initialSizes.current[boxId]?.height ?? rect.height;
 
               if (typeof currentW !== "number") box.width.set(rect.width);
               if (typeof currentH !== "number") box.height.set(rect.height);
@@ -1064,31 +952,31 @@ export default function Hero() {
               setActiveBoxId(boxId);
               await flyTo(cornerX, cornerY, 0.4);
               await click(cornerX, cornerY);
-              await new Promise(r => setTimeout(r, 150));
+              await new Promise(r => setTimeout(r, 100));
 
-              // Animate resizing to auto bounds, with bot cursor moving along
-              const targetCornerX = rect.left + autoW;
-              const targetCornerY = rect.top + autoH;
+              // Animate resizing back to original size bounds, with bot cursor moving along (slower correction - 0.9s)
+              const targetCornerX = rect.left + targetW;
+              const targetCornerY = rect.top + targetH;
 
               await Promise.all([
-                animate(box.width, autoW, { duration: 0.6, ease: "easeInOut" }),
-                animate(box.height, autoH, { duration: 0.6, ease: "easeInOut" }),
+                animate(box.width, targetW, { duration: 0.9, ease: "easeInOut" }),
+                animate(box.height, targetH, { duration: 0.9, ease: "easeInOut" }),
                 botControls.start({
                   x: targetCornerX,
                   y: targetCornerY,
-                  transition: { duration: 0.6, ease: "easeInOut" }
+                  transition: { duration: 0.9, ease: "easeInOut" }
                 })
               ]);
 
               // Restore responsive auto bounds
               box.width.set(undefined);
               box.height.set(undefined);
-              await new Promise(r => setTimeout(r, 150));
+              await new Promise(r => setTimeout(r, 100));
             }
 
-            // Deselect element
-            setActiveBoxId(""); 
-            await new Promise(r => setTimeout(r, 200));
+            // Deselect/restore element
+            setActiveBoxId(previousActiveBoxId.current); 
+            await new Promise(r => setTimeout(r, 100));
 
             // If last target, fly away
             if (index === targetIds.length - 1) {
@@ -1096,6 +984,100 @@ export default function Hero() {
               await flyAway(rect.left + rect.width / 2, rect.top + rect.height / 2);
             }
           }
+        };
+
+        // ===== ACTION: Toggle Fancy Font on JAYRAJ =====
+        const actionToggleFancy = async () => {
+          checkAbort();
+          
+          // 1. If JAYRAJ is not active, select it
+          if (activeBoxIdRef.current !== "title") {
+            const titleBox = boxes["title"];
+            if (!titleBox.ref.current) return;
+            const rect = titleBox.ref.current.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            
+            await flyTo(cx, cy, 0.25);
+            checkAbort();
+            await click(cx, cy);
+            setActiveBoxId("title");
+            await new Promise(r => setTimeout(r, 200)); // wait for transitions/render
+          }
+          
+          checkAbort();
+          
+          const titleBox = boxes["title"];
+          if (!titleBox.ref.current) return;
+          const rect = titleBox.ref.current.getBoundingClientRect();
+          
+          let toggleX = rect.right - 40;
+          let toggleY = rect.bottom + 10;
+          
+          const fancyBtn = document.getElementById("toggle-fancy");
+          if (fancyBtn) {
+            const btnRect = fancyBtn.getBoundingClientRect();
+            toggleX = btnRect.left + btnRect.width / 2;
+            toggleY = btnRect.top + btnRect.height / 2;
+          }
+          
+          await flyTo(toggleX, toggleY, 0.2);
+          checkAbort();
+          await click(toggleX, toggleY);
+          
+          setIsFancyFont(!isFancyFontRef.current);
+          
+          await new Promise(r => setTimeout(r, 250));
+          checkAbort();
+          await flyAway(toggleX, toggleY);
+          setActiveBoxId(previousActiveBoxId.current);
+        };
+
+        // ===== ACTION: Toggle Pixel Font on Surname =====
+        const actionTogglePixel = async () => {
+          checkAbort();
+          
+          // 1. If Surname is not active, select it
+          if (activeBoxIdRef.current !== "surname") {
+            const surnameBox = boxes["surname"];
+            if (!surnameBox.ref.current) return;
+            const rect = surnameBox.ref.current.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            
+            await flyTo(cx, cy, 0.25);
+            checkAbort();
+            await click(cx, cy);
+            setActiveBoxId("surname");
+            await new Promise(r => setTimeout(r, 200)); // wait for transitions/render
+          }
+          
+          checkAbort();
+          
+          const surnameBox = boxes["surname"];
+          if (!surnameBox.ref.current) return;
+          const rect = surnameBox.ref.current.getBoundingClientRect();
+          
+          let toggleX = rect.right - 40;
+          let toggleY = rect.bottom + 10;
+          
+          const pixelBtn = document.getElementById("toggle-pixel");
+          if (pixelBtn) {
+            const btnRect = pixelBtn.getBoundingClientRect();
+            toggleX = btnRect.left + btnRect.width / 2;
+            toggleY = btnRect.top + btnRect.height / 2;
+          }
+          
+          await flyTo(toggleX, toggleY, 0.2);
+          checkAbort();
+          await click(toggleX, toggleY);
+          
+          setIsPixelFont(!isPixelFontRef.current);
+          
+          await new Promise(r => setTimeout(r, 250));
+          checkAbort();
+          await flyAway(toggleX, toggleY);
+          setActiveBoxId(previousActiveBoxId.current);
         };
 
         // ===== ACTION: Slowly drift in the canvas plane =====
@@ -1136,12 +1118,13 @@ export default function Hero() {
           // Pick a random action with weighted probabilities
           const botSpawnedCount = dynamicElementsRef.current.filter((el: any) => el.id.startsWith('bot-')).length;
           const actions = [
-            { fn: actionType, weight: botSpawnedCount >= 2 ? 0 : 20 },
+            { fn: actionType, weight: botSpawnedCount >= 1 ? 0 : 40 },
             { fn: actionRearrange, weight: 15 },
-            { fn: actionShape, weight: botSpawnedCount >= 2 ? 0 : 10 },
             { fn: actionDelete, weight: botSpawnedCount > 0 ? 15 : 0 },
             { fn: actionResize, weight: 10 },
-            { fn: actionDrift, weight: 50 },
+            { fn: actionToggleFancy, weight: 20 },
+            { fn: actionTogglePixel, weight: 20 },
+            { fn: actionDrift, weight: 30 },
           ];
 
           const totalWeight = actions.reduce((sum, a) => sum + a.weight, 0);
@@ -1163,8 +1146,10 @@ export default function Hero() {
           try {
             await chosenAction();
             console.log("Bot action completed successfully:", actionName);
-          } catch (e) {
-            console.error("Bot action error:", e);
+          } catch (e: any) {
+            if (e !== "abort" && e?.message !== "abort") {
+              console.error("Bot action error:", e);
+            }
           }
 
           // Check if there are other elements needing correction
@@ -1210,8 +1195,6 @@ export default function Hero() {
   };
 
   const handleCanvasClick = (e: React.MouseEvent) => {
-    setActiveBoxId(""); 
-
     if (activeTool === "cursor" || activeTool === "hand" || activeTool === "frame") return;
 
     const innerCanvas = document.getElementById("inner-canvas");
@@ -1282,8 +1265,8 @@ export default function Hero() {
 
         <div 
           className={cn(
-            "figma-box relative flex border transition-colors duration-300 h-full w-full",
-            isSelected ? "border-[#3b82f6]" : "border-gray-200/50 group-hover:border-gray-300"
+            "relative flex transition-all duration-300 h-full w-full rounded-lg",
+            isSelected ? "figma-box border-[#3b82f6] shadow-lg shadow-blue-500/5" : ""
           )}
         >
           {isSelected && (
@@ -1314,7 +1297,7 @@ export default function Hero() {
               ></div>
             </>
           )}
-          <div className={cn("w-full h-full", id === "surname" ? "overflow-visible" : "overflow-hidden")}>
+          <div className={cn("w-full h-full", (id === "surname" || id === "title") ? "overflow-visible" : "overflow-hidden")}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1331,7 +1314,8 @@ export default function Hero() {
 
   return (
     <section 
-      className="h-screen sticky top-0 overflow-hidden cursor-none z-0 bg-[#f8f9fa]"
+      ref={sectionRef}
+      className="h-screen sticky top-0 overflow-hidden cursor-none z-0 figma-canvas"
       onClick={handleHeroClick}
     >
       {ripples.map(r => (
@@ -1346,6 +1330,7 @@ export default function Hero() {
       ))}
       {/* The Global Jayraj Bot Cursor */}
       <motion.div 
+        id="bot-cursor"
         animate={botControls}
         initial={{ opacity: 1, x: 400, y: 200 }}
         className={cn(
@@ -1377,46 +1362,15 @@ export default function Hero() {
             
             {/* Title (Left) */}
             {renderDraggableBox("title", "Title", (
-              <div className="w-full h-full flex items-end">
+              <div className="relative w-full h-full flex items-end">
                 <h1 className="w-full text-[8vw] md:text-[6vw] lg:text-[7rem] tracking-[-0.02em] text-[#1a233a] leading-none font-bold select-none px-2 md:px-8 pb-2 md:pb-3 cursor-none">
                   JAYRAJ
                 </h1>
-              </div>
-            ), "left-4 md:left-[calc(50%-340px)] w-[calc(50%-20px)] md:w-[400px] top-4 md:top-12 h-[64px] md:h-[160px]")}
-
-            {/* Surname (Right) */}
-            {renderDraggableBox("surname", "Surname", (
-              <div className="relative w-full h-full flex items-end">
-                <h2 className={cn(
-                  "w-full text-[8vw] md:text-[6vw] lg:text-[5rem] tracking-[-0.02em] text-[#1a233a] leading-none pb-2 md:pb-3 px-2 md:px-8 select-none pointer-events-none cursor-none",
-                  isPixelFont ? "font-[family-name:var(--font-rubik-pixels)] text-[#3b82f6] opacity-80 no-fancy" : "font-bold"
-                )}>
-                  PATEL
-                </h2>
-                <div className="absolute -bottom-5 right-2 md:right-0 md:-bottom-6 z-10 flex items-center gap-2 md:gap-4 cursor-none scale-75 md:scale-100 origin-right">
-                  <div className="flex items-center gap-1 md:gap-2 pointer-events-auto select-none">
-                    <span className="text-[7px] font-bold uppercase tracking-wider text-gray-400">Pixel</span>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsPixelFont(!isPixelFont);
-                      }}
-                      onPointerDownCapture={(e) => e.stopPropagation()}
-                      className={cn(
-                        "w-7 h-3.5 rounded-full transition-colors relative shadow-sm cursor-none",
-                        isPixelFont ? "bg-blue-500" : "bg-gray-300"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-2.5 h-2.5 rounded-full bg-white absolute top-[2px] shadow-sm transition-all",
-                        isPixelFont ? "left-3.5" : "left-[2px]"
-                      )}></div>
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 md:gap-2 pointer-events-auto select-none">
+                {activeBoxId === "title" && (
+                  <div className="absolute -bottom-5 right-2 md:right-8 md:-bottom-6 z-[60] flex items-center gap-1 md:gap-2 pointer-events-auto select-none scale-75 md:scale-100 origin-right">
                     <span className="text-[7px] font-bold uppercase tracking-wider text-gray-400">Fancy</span>
                     <button 
+                      id="toggle-fancy"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsFancyFont(!isFancyFont);
@@ -1433,9 +1387,43 @@ export default function Hero() {
                       )}></div>
                     </button>
                   </div>
-                </div>
+                )}
               </div>
-            ), "left-[calc(50%+4px)] md:left-[calc(50%+60px)] w-[calc(50%-20px)] md:w-[280px] top-4 md:top-[98px] h-[64px] md:h-[110px]")}
+            ), "left-4 md:left-[calc(50%-340px)] w-[calc(50%-20px)] md:w-[400px] top-4 md:top-12 h-[64px] md:h-[160px]")}
+
+            {/* Surname (Right) */}
+            {renderDraggableBox("surname", "Surname", (
+              <div className="relative w-full h-full flex items-end">
+                <h2 className={cn(
+                  "w-full text-[8vw] md:text-[6vw] lg:text-[6.5rem] tracking-[-0.02em] text-[#1a233a] leading-none pb-2 md:pb-3 px-2 md:px-8 select-none pointer-events-none cursor-none no-fancy",
+                  isPixelFont ? "font-[family-name:var(--font-rubik-pixels)] text-[#3b82f6] opacity-80" : "font-bold"
+                )}>
+                  PATEL
+                </h2>
+                {activeBoxId === "surname" && (
+                  <div className="absolute -bottom-5 right-2 md:right-8 md:-bottom-6 z-[60] flex items-center gap-1 md:gap-2 pointer-events-auto select-none scale-75 md:scale-100 origin-right">
+                    <span className="text-[7px] font-bold uppercase tracking-wider text-gray-400">Pixel</span>
+                    <button 
+                      id="toggle-pixel"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsPixelFont(!isPixelFont);
+                      }}
+                      onPointerDownCapture={(e) => e.stopPropagation()}
+                      className={cn(
+                        "w-7 h-3.5 rounded-full transition-colors relative shadow-sm cursor-none",
+                        isPixelFont ? "bg-blue-500" : "bg-gray-300"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-2.5 h-2.5 rounded-full bg-white absolute top-[2px] shadow-sm transition-all",
+                        isPixelFont ? "left-3.5" : "left-[2px]"
+                      )}></div>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ), "left-[calc(50%+4px)] md:left-[calc(50%+60px)] w-[calc(50%-20px)] md:w-[350px] top-4 md:top-[80px] h-[64px] md:h-[140px]")}
 
             {/* Summary (Centered Below) */}
             {renderDraggableBox("summary", "Summary", (

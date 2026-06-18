@@ -23,6 +23,18 @@ const experiences = [
     ]
   },
   {
+    id: "bhaktisetu-volunteer",
+    title: "Lead Frontend & UI/UX Engineer",
+    company: "Volunteering, SSYV BhaktiSetu",
+    period: "Jun 2025 – Present",
+    points: [
+      "Led frontend architecture and UI/UX design for a self-hosted, enterprise-grade Devotee Management Platform, integrating intelligent semantic parsing to categorize data for 3,000+ active users.",
+      "Engineered a high-performance, conditional onboarding pipeline and dashboard using Next.js 15, React 19, and TypeScript, leveraging AI/LLM assistants to parse devotee information and enforcing strict data integrity with Zod.",
+      "Designed a data-dense, futuristic administrative interface using Tailwind CSS 4, utilizing glassmorphic card layouts and AI-assisted dynamic sorting to optimize complex data table navigation and reduce visual fatigue.",
+      "Collaborated with a 4-person development team to integrate the frontend with a sovereign, Dockerized backend ecosystem and private AI inference pipelines to ensure absolute data privacy."
+    ]
+  },
+  {
     id: "freelance",
     title: "Web Developer",
     company: "Freelance",
