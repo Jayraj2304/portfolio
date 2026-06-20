@@ -47,10 +47,12 @@ Ambitious Software Engineer with hands-on experience in cross-platform developme
 ## Projects
 **Yatna.fit** - [Full Stack Fitness Platform](https://yatna.fit/)
 *Nov 2025 -- Present*
-* Developed a full-stack fitness platform, owning the end-to-end development lifecycle from initial database design to production deployment.
-* Engineered the complete backend and configured automated CI/CD pipelines to ensure seamless feature delivery.
-* Designed a robust NoSQL database schema to handle complex user profiles, dynamic workout logs, and real-time progress tracking.
-* **Stack:** React 19, Node.js, Express.js, MongoDB Atlas, Tailwind CSS, Vite, Render.
+* **Complete Product Ownership:** Owning the entire product lifecycle from initial database architecture to CI/CD pipelines, testing, UI/UX, and identity/logo design. Currently developing native iOS and Android applications.
+* **Dashboard & Body Matrix:** Engineered dynamic biometric tracking (Lean vs. Fat Mass), body fat calculation formulas (US Navy), and a morphology girth analysis module with interactive radar charting matching "Aesthetic Ideal" metrics.
+* **Iron Log (Workout Engine):** Designed routine splits, set-type classification (Working, Warm-up, Top, Failure, Back-off, Drop sets), intra-set rest timers, and on-the-fly strength analytics (Epley 1RM, history curves, and muscle maps).
+* **Anatomy Heatmaps & Recaps:** Formulated post-workout anterior/posterior muscle fatigue heatmaps, automated "digital workout receipt" shareables, and monthly streak compliance trackers.
+* **Total Fit Analysis:** Implemented executive reporting with macro-interval volume/tonnage aggregation and systemic load distribution logs to detect structural asymmetries.
+* **Stack:** React 19, Node.js, Express.js, MongoDB Atlas, Tailwind CSS, Vite, Render. (React Native & Mobile App Pipelines in active development).
 
 **SSYV BhaktiSetu** - [Devotee Management Platform](#)
 *Dec 2025 -- Present*

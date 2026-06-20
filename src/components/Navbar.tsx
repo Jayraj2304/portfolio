@@ -5,12 +5,22 @@ import { Search, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearch } from "./SearchContext";
+import { cn } from "@/lib/utils";
 
 export default function Navbar() {
   const [dateStr, setDateStr] = useState("");
   const [timeStr, setTimeStr] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { setIsSearchOpen } = useSearch();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -39,39 +49,23 @@ export default function Navbar() {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-0 w-full z-50 bg-[#f8f9fa]/90 backdrop-blur-sm border-b border-black/5"
+        className={cn(
+          "fixed top-0 w-full z-50 transition-all duration-300",
+          isScrolled 
+            ? "bg-[#f8f9fa]/90 backdrop-blur-sm border-b border-black/5" 
+            : "bg-transparent"
+        )}
       >
         
-        {/* Absolute Location & Weather Badge (Top Left) */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9, x: -20 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1 }}
-          className="absolute top-[120px] left-8 hidden xl:flex flex-col gap-1.5 text-[9px] uppercase font-mono text-white/90 tracking-widest z-50 bg-[#1a233a]/80 backdrop-blur-md px-4 py-3 rounded-lg border border-white/10 shadow-xl"
-        >
-          <span>AHMEDABAD / {timeStr} / {dateStr}</span>
-          <span className="text-white font-bold text-[10px] flex items-center gap-1">
-            34°C <span className="text-yellow-400 text-[12px] ml-1">☀️</span>
-          </span>
-        </motion.div>
 
         {/* Main Navigation */}
-        <nav className="container mx-auto max-w-[1400px] px-6 h-20 flex items-center justify-between">
+        <nav className={cn(
+          "container mx-auto max-w-[1400px] px-6 flex items-center justify-between transition-all duration-300",
+          isScrolled ? "h-16" : "h-20"
+        )}>
           
-          {/* Logo / Brand */}
-          <Link href="/" className="flex items-center gap-3">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-6 h-6 flex items-center justify-center cursor-pointer"
-            >
-              <img src="/chess.png" alt="chess" className="w-6 h-6 object-contain" />
-            </motion.div>
-            <span className="font-bold text-[13px] tracking-[0.2em] text-[#1a233a]">JAYRAJ PATEL</span>
-          </Link>
-
           {/* Links (Desktop) */}
-          <div className="hidden md:flex items-center gap-12 font-[family-name:var(--font-miriam)] text-[11px] tracking-[0.15em] text-gray-500 ml-12">
+          <div className="hidden md:flex items-center gap-12 font-[family-name:var(--font-miriam)] text-[11px] tracking-[0.15em] text-gray-500">
             <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.95 }} className="hover:text-black transition-colors cursor-pointer">
               <Link href="/projects">PROJECTS <sup className="text-[8px] font-bold text-blue-500">3</sup></Link>
             </motion.div>
@@ -82,6 +76,9 @@ export default function Navbar() {
               <Link href="/contact">CONTACT</Link>
             </motion.div>
           </div>
+
+          {/* Spacer for mobile to push actions to the right */}
+          <div className="flex-1 md:hidden" />
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 md:gap-4">
@@ -94,7 +91,7 @@ export default function Navbar() {
               <Link href="/#agent">TALK TO MY AI</Link>
             </motion.div>
 
-            {/* Search Trigger Button (All Screen Sizes) */}
+            {/* Search Trigger Button */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -130,13 +127,7 @@ export default function Navbar() {
             className="fixed inset-0 z-[100] bg-[#f8f9fa]/95 backdrop-blur-md flex flex-col justify-between p-6"
           >
             {/* Header */}
-            <div className="flex items-center justify-between h-20 px-2">
-              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3">
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <img src="/chess.png" alt="chess" className="w-6 h-6 object-contain" />
-                </div>
-                <span className="font-bold text-[13px] tracking-[0.2em] text-[#1a233a]">JAYRAJ PATEL</span>
-              </Link>
+            <div className="flex items-center justify-end h-20 px-2">
               <button 
                 onClick={() => setIsMobileMenuOpen(false)} 
                 className="p-2 text-gray-500 hover:text-black"

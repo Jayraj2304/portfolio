@@ -20,8 +20,8 @@ const ALL_PROJECTS = [
   {
     id: "yatna",
     title: "Yatna.fit",
-    description: "Full-stack fitness platform, owning the end-to-end development lifecycle from initial database design to production deployment.",
-    tech: ["React 19", "Node.js", "MongoDB", "Tailwind CSS"],
+    description: "A highly optimized, science-based fitness ecosystem and data-dense body matrix tracking vital composition, morphology scans, and high-fidelity workout execution (Iron Log). Fully self-engineered from logo design, automated testing, and CI/CD pipelines, to upcoming native iOS and Android mobile applications.",
+    tech: ["React 19", "Node.js", "MongoDB", "Tailwind CSS", "CI/CD", "Mobile"],
     link: "https://yatna.fit",
     placeholder: "Y",
     image: "/yatnafit.png"

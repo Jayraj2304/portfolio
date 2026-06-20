@@ -28,7 +28,7 @@ export default function FigmaToolbar({ activeTool, setActiveTool, isVisible = tr
       animate={{ opacity: isVisible ? 1 : 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className={cn(
-        "fixed bottom-4 md:bottom-auto left-1/2 md:left-8 top-auto md:top-1/2 -translate-x-1/2 md:translate-x-0 -translate-y-0 md:-translate-y-1/2 z-[100] bg-[#1a233a]/90 backdrop-blur-md rounded-xl shadow-2xl border border-white/10 p-1.5 flex flex-row md:flex-col items-center gap-1 cursor-none transition-all duration-300",
+        "hidden md:flex fixed bottom-4 md:bottom-auto left-1/2 md:left-8 top-auto md:top-1/2 -translate-x-1/2 md:translate-x-0 -translate-y-0 md:-translate-y-1/2 z-[100] bg-[#1a233a]/90 backdrop-blur-md rounded-xl shadow-2xl border border-white/10 p-1.5 flex-col items-center gap-1 cursor-none transition-all duration-300",
         isVisible ? "pointer-events-auto" : "pointer-events-none"
       )}
     >

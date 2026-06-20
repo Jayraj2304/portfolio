@@ -86,7 +86,7 @@ export default function Footer() {
             <Link
               ref={circleRef}
               href="/contact"
-              className="w-40 h-40 md:w-60 md:h-60 bg-yellow-400 rounded-full flex flex-col items-center justify-center text-[#0f172a] hover:bg-white transition-all duration-300 shadow-2xl relative cursor-pointer group select-none text-center"
+              className="w-40 h-40 md:w-60 md:h-60 bg-white rounded-full flex flex-col items-center justify-center text-[#0f172a] hover:bg-white transition-all duration-300 shadow-2xl relative cursor-pointer group select-none text-center"
             >
               <span className="text-xs uppercase font-extrabold tracking-[0.25em] font-mono leading-tight group-hover:scale-105 transition-transform">
                 SAY <br /> HELLO
@@ -130,20 +130,12 @@ export default function Footer() {
                 LinkedIn
               </a>
               <a 
-                href="https://github.com" 
+                href="https://github.com/Jayraj2304" 
                 target="_blank" 
                 rel="noreferrer" 
                 className="text-white hover:text-yellow-400 transition-colors"
               >
                 GitHub
-              </a>
-              <a 
-                href="https://x.com" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="text-white hover:text-yellow-400 transition-colors"
-              >
-                Twitter / X
               </a>
             </div>
           </div>

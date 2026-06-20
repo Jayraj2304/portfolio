@@ -28,8 +28,8 @@ const SEARCH_DATABASE: SearchItem[] = [
     type: "project",
     title: "Yatna.fit",
     subtitle: "Full-Stack Fitness Platform",
-    description: "Full-stack fitness platform, owning the end-to-end development lifecycle from initial database design to production deployment.",
-    tags: ["React 19", "Node.js", "MongoDB", "Tailwind CSS"],
+    description: "A highly optimized, science-based training ecosystem and data-dense body composition matrix (Iron Log). Fully self-engineered from branding/logo design, automated testing, and CI/CD pipelines, to native mobile applications.",
+    tags: ["React 19", "Node.js", "MongoDB", "Tailwind CSS", "CI/CD", "Mobile"],
     link: "/#work"
   },
   {

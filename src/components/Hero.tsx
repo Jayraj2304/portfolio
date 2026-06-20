@@ -14,7 +14,7 @@ const ABOUT_ME_SENTENCES = [
   "Peer-to-peer mesh sync across distributed sites.",
   "RSA-OAEP-SHA256 encryption at rest.",
   "Air-gapped update distribution protocol.",
-  "Created Yatna.fit — end-to-end fitness app.",
+  "Created Yatna.fit — science-based fitness engine.",
   "C#, TypeScript, Python — fluent in all.",
   "FFmpeg + Direct3D11 GPU rendering pipeline.",
   "CI/CD pipelines are my morning coffee."
@@ -112,9 +112,13 @@ function DynamicDraggableBox({
   handleDrag,
   handleDragEndComplete,
   isTouchDevice,
-  setDynamicElements
+  setDynamicElements,
+  editingElementId,
+  setEditingElementId
 }: any) {
   const isSelected = activeBoxId === el.id;
+  const isEditing = editingElementId === el.id;
+  const lastTapRef = useRef(0);
   
   // Create local motion values since it's dynamic
   const localX = useMotionValue(el.x);
@@ -129,18 +133,32 @@ function DynamicDraggableBox({
     if (el.height !== undefined) height.set(el.height);
   }, [el.x, el.y, el.width, el.height, localX, localY, width, height]);
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    const now = Date.now();
+    if (el.type === 'type') {
+      if (now - lastTapRef.current < 300) {
+        e.stopPropagation();
+        setEditingElementId(el.id);
+        setActiveBoxId(el.id);
+      } else {
+        lastTapRef.current = now;
+      }
+    }
+  };
+
   return (
     <motion.div
       ref={ref}
       id={el.id}
-      drag={!isTouchDevice && activeTool === "cursor"}
+      drag={activeTool === "cursor" && !isEditing}
       dragMomentum={false}
       onDragStart={() => setActiveBoxId(el.id)}
       onDrag={() => handleDrag(el.id)}
       onDragEnd={() => { handleDynamicDragEnd(el.id, localX.get(), localY.get()); handleDragEndComplete(); }}
+      onPointerDown={handlePointerDown}
       onClick={(e) => { e.stopPropagation(); setActiveBoxId(el.id); }}
       className="dynamic-box absolute cursor-none inline-block z-40 group pointer-events-auto"
-      style={{ left: 0, top: 0, x: localX, y: localY, width, height }}
+      style={{ left: 0, top: 0, x: localX, y: localY, width, height, touchAction: isEditing ? "auto" : "none" }}
     >
       {isSelected && (
         <div className="absolute -top-[19px] left-[-1.5px] bg-[#3b82f6] text-white text-[9px] font-bold px-1 py-[1px] z-10 rounded-sm tracking-wide pointer-events-none capitalize">
@@ -164,7 +182,7 @@ function DynamicDraggableBox({
           isSelected ? "figma-box border-[#3b82f6]" : ""
         )}
       >
-        {isSelected && (
+        {isSelected && !isEditing && (
           <>
             <div 
               className="figma-handle figma-handle-tl z-50 pointer-events-auto" 
@@ -197,21 +215,40 @@ function DynamicDraggableBox({
             <div className={cn("w-full h-full border-2 rounded-lg backdrop-blur-sm cursor-none min-w-[80px] min-h-[80px]", el.theme?.bg ?? "bg-blue-500/20", el.theme?.border ?? "border-blue-500")}></div>
           )}
           {el.type === 'type' && (
-            <textarea
-              value={el.text ?? ""}
-              onChange={(e) => {
-                const newText = e.target.value;
-                setDynamicElements((prev: any[]) =>
-                  prev.map(item => item.id === el.id ? { ...item, text: newText } : item)
-                );
-              }}
-              onPointerDownCapture={(e) => e.stopPropagation()}
-              placeholder="Type here..."
-              className={cn(
-                "w-full h-full min-w-[100px] min-h-[40px] text-xl font-bold text-[#1a233a] outline-none cursor-none p-2 bg-white/60 backdrop-blur-sm rounded-md border resize-none",
-                el.theme?.border ?? "border-gray-200"
-              )}
-            />
+            isEditing ? (
+              <textarea
+                ref={(input) => {
+                  if (input) {
+                    input.focus();
+                    const len = input.value.length;
+                    input.setSelectionRange(len, len);
+                  }
+                }}
+                value={el.text ?? ""}
+                onChange={(e) => {
+                  const newText = e.target.value;
+                  setDynamicElements((prev: any[]) =>
+                    prev.map(item => item.id === el.id ? { ...item, text: newText } : item)
+                  );
+                }}
+                onBlur={() => setEditingElementId(null)}
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                placeholder="Type here..."
+                className={cn(
+                  "w-full h-full min-w-[100px] min-h-[40px] text-xl font-bold text-[#1a233a] outline-none cursor-none p-2 bg-white/60 backdrop-blur-sm rounded-md border resize-none",
+                  el.theme?.border ?? "border-gray-200"
+                )}
+              />
+            ) : (
+              <div
+                className={cn(
+                  "w-full h-full min-w-[100px] min-h-[40px] text-xl font-bold text-[#1a233a] p-2 bg-white/60 backdrop-blur-sm rounded-md border whitespace-pre-wrap select-none overflow-hidden cursor-none pointer-events-none",
+                  el.theme?.border ?? "border-gray-200"
+                )}
+              >
+                {el.text || <span className="text-gray-400 font-normal text-sm select-none">Double tap to edit...</span>}
+              </div>
+            )
           )}
           {el.type === 'comment' && (
             <div className="w-full h-full flex items-center justify-center bg-white p-3 rounded-full shadow-lg border border-gray-200 cursor-none min-w-[50px] min-h-[50px]">
@@ -225,8 +262,14 @@ function DynamicDraggableBox({
 }
 
 
+
 export default function Hero() {
   const [isPixelFont, setIsPixelFont] = useState(true);
+  const [titleText, setTitleText] = useState("JAYRAJ");
+  const [surnameText, setSurnameText] = useState("PATEL");
+  const [summaryText, setSummaryText] = useState(
+    "Aspiring software engineer with hands-on experience in cross-platform development and integrating Large Language Models. Eager to learn, build simple solutions for complex challenges, and contribute to great teams."
+  );
   const { isFancyFont, setIsFancyFont } = useSearch();
   const [activeBoxId, setActiveBoxId] = useState("title");
   const previousActiveBoxId = useRef("title");
@@ -258,6 +301,7 @@ export default function Hero() {
   // Tool state
   const [activeTool, setActiveTool] = useState("cursor");
   const [dynamicElements, setDynamicElements] = useState<any[]>([]);
+  const [editingElementId, setEditingElementId] = useState<string | null>(null);
 
   // Lock page scroll when a non-cursor Figma tool is active (prevents scrolling while operating the canvas)
   useEffect(() => {
@@ -316,11 +360,67 @@ export default function Hero() {
 
   const botControls = useAnimation();
   const isBotBusy = useRef(false);
+  const pendingRestorations = useRef<string[]>([]);
   const sentenceIndex = useRef(0);
 
   const setBotBusy = (busy: boolean) => {
     isBotBusy.current = busy;
     window.dispatchEvent(new CustomEvent('bot-busy', { detail: busy }));
+  };
+
+  const botFlyTo = async (targetX: number, targetY: number) => {
+    let currentX = 400;
+    let currentY = 200;
+    const botEl = document.getElementById("bot-cursor");
+    if (botEl) {
+      const rect = botEl.getBoundingClientRect();
+      currentX = rect.left;
+      currentY = rect.top;
+    }
+
+    const dx = targetX - currentX;
+    const dy = targetY - currentY;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance < 15) {
+      await botControls.start({ x: targetX, y: targetY, opacity: 1, scale: 1, transition: { duration: 0.1 } });
+      return;
+    }
+
+    const perpX = -dy / distance;
+    const perpY = dx / distance;
+    const curvature = (Math.random() - 0.5) * 0.16 * distance;
+    const midX = currentX + dx / 2 + perpX * curvature;
+    const midY = currentY + dy / 2 + perpY * curvature;
+
+    const steps = 12;
+    const pathX = [];
+    const pathY = [];
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const px = (1 - t) * (1 - t) * currentX + 2 * (1 - t) * t * midX + t * t * targetX;
+      const py = (1 - t) * (1 - t) * currentY + 2 * (1 - t) * t * midY + t * t * targetY;
+      pathX.push(px);
+      pathY.push(py);
+    }
+
+    const finalDuration = Math.max(0.5, Math.min(1.2, distance / 400));
+
+    await botControls.start({
+      x: pathX,
+      y: pathY,
+      opacity: 1,
+      scale: 1,
+      transition: { duration: finalDuration, ease: "easeOut" }
+    });
+  };
+
+  const botClick = async (cx?: number, cy?: number) => {
+    if (cx !== undefined && cy !== undefined) {
+      triggerRipple(cx, cy, "#ff4e40");
+    }
+    await botControls.start({ scale: 0.8, transition: { duration: 0.08 } });
+    await botControls.start({ scale: 1, transition: { duration: 0.08 } });
   };
 
   // Trash & Visibility State
@@ -370,6 +470,127 @@ export default function Hero() {
     summary: { x: summaryX, y: summaryY, width: summaryResize.width, height: summaryResize.height, ref: summaryResize.ref, startResize: summaryResize.startResize },
     surname: { x: surnameX, y: surnameY, width: surnameResize.width, height: surnameResize.height, ref: surnameResize.ref, startResize: surnameResize.startResize }
   };
+
+  const restoreSpecificElements = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setBotBusy(true);
+    
+    // Clear them from pending list since we are restoring them now
+    pendingRestorations.current = pendingRestorations.current.filter(id => !ids.includes(id));
+    
+    lastInteractionTime.current = Date.now() + 60000; // prevent user interference during restore
+    
+    try {
+      const ic = document.getElementById("inner-canvas");
+      if (!ic) throw "no canvas";
+      const r = ic.getBoundingClientRect();
+      
+      const canvasX = r.left;
+      const canvasY = r.top;
+      const canvasWidth = r.width;
+      const isMobile = window.innerWidth < 768;
+      
+      // Elements base positions offsets
+      const positions: Record<string, { x: number; y: number; wOffset: number; hOffset: number; setX: any; setY: any; resize: any }> = {
+        title: { 
+          x: isMobile ? 16 : (canvasWidth / 2 - 340), 
+          y: isMobile ? 16 : 48, 
+          wOffset: 150, 
+          hOffset: 60,
+          setX: titleX,
+          setY: titleY,
+          resize: titleResize
+        },
+        surname: { 
+          x: isMobile ? (canvasWidth / 2 + 4) : (canvasWidth / 2 + 60), 
+          y: isMobile ? 16 : 80, 
+          wOffset: 150, 
+          hOffset: 50,
+          setX: surnameX,
+          setY: surnameY,
+          resize: surnameResize
+        },
+        summary: { 
+          x: isMobile ? 16 : (canvasWidth / 2 - 340), 
+          y: isMobile ? 110 : 240, 
+          wOffset: 250, 
+          hOffset: 40,
+          setX: summaryX,
+          setY: summaryY,
+          resize: summaryResize
+        }
+      };
+
+      for (const id of ids) {
+        const pos = positions[id];
+        if (!pos) continue;
+
+        // Move to the position, "click" to draw
+        await botFlyTo(canvasX + pos.x + pos.wOffset, canvasY + pos.y + pos.hOffset);
+        await botClick(canvasX + pos.x + pos.wOffset, canvasY + pos.y + pos.hOffset);
+        
+        // Reset text content to empty with cursor before showing the box
+        const setTextState = id === 'title' ? setTitleText : id === 'surname' ? setSurnameText : setSummaryText;
+        const targetText = id === 'title' ? "JAYRAJ" : id === 'surname' ? "PATEL" : "Aspiring software engineer with hands-on experience in cross-platform development and integrating Large Language Models. Eager to learn, build simple solutions for complex challenges, and contribute to great teams.";
+        
+        setTextState(" |");
+        setVisibleBoxes(prev => ({ ...prev, [id]: true }));
+        pos.setX.set(0); 
+        pos.setY.set(0);
+        pos.resize.width.set(undefined); 
+        pos.resize.height.set(undefined);
+        
+        await new Promise(res => setTimeout(res, 300));
+        
+        // Type letter by letter
+        let currentTyped = "";
+        for (let idx = 0; idx < targetText.length; idx++) {
+          currentTyped += targetText[idx];
+          setTextState(currentTyped + " |");
+          const delay = id === 'summary' ? 12 + Math.random() * 12 : 70 + Math.random() * 30;
+          await new Promise(res => setTimeout(res, delay));
+        }
+        
+        // Remove trailing cursor once complete
+        setTextState(targetText);
+        await new Promise(res => setTimeout(res, 500));
+      }
+
+      // Fly away back to home position
+      await botFlyTo(canvasX + 400, canvasY + 200);
+    } catch (err) {
+      console.error("Restore failed:", err);
+    } finally {
+      lastInteractionTime.current = Date.now();
+      setBotBusy(false);
+      
+      // If there are pending restorations that were queued while we were drawing, trigger them now!
+      if (pendingRestorations.current.length > 0) {
+        restoreSpecificElements([...pendingRestorations.current]);
+      }
+    }
+  };
+
+  const restoreSpecificElementsRef = useRef(restoreSpecificElements);
+  restoreSpecificElementsRef.current = restoreSpecificElements;
+
+  // Trigger bot restoration if any main boxes are deleted
+  useEffect(() => {
+    const deletedBoxes = (Object.keys(visibleBoxes) as Array<keyof typeof visibleBoxes>).filter(id => !visibleBoxes[id]);
+    if (deletedBoxes.length > 0) {
+      if (!isBotBusy.current) {
+        console.log("Deleted elements detected! Triggering bot restore for:", deletedBoxes);
+        restoreSpecificElements(deletedBoxes);
+      } else {
+        console.log("Deleted elements detected, but bot is busy. Queuing restoration for:", deletedBoxes);
+        deletedBoxes.forEach(id => {
+          if (!pendingRestorations.current.includes(id)) {
+            pendingRestorations.current.push(id);
+          }
+        });
+      }
+    }
+  }, [visibleBoxes]);
 
   const lastInteractionTime = useRef(Date.now() - 3000);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -590,6 +811,9 @@ export default function Hero() {
         const actionType = async () => {
           checkAbort();
           const isMobile = window.innerWidth < 768;
+          const w = window.innerWidth;
+          const boxWidth = isMobile ? Math.min(280, w - 32) : 320;
+          const boxHeight = isMobile ? 120 : 90;
 
           // Try to find a completely randomized, non-overlapping spawn point for typing
           let canvasX = 50;
@@ -598,10 +822,11 @@ export default function Hero() {
           
           while (attempts < 30) {
             if (isMobile) {
-              canvasX = 20 + Math.random() * 120;
-              canvasY = 320 + Math.random() * 120;
+              const center = (w - boxWidth) / 2;
+              canvasX = Math.max(16, center + (Math.random() - 0.5) * 20);
+              canvasY = 320 + Math.random() * 40;
             } else {
-              canvasX = 50 + Math.random() * 950;
+              canvasX = 50 + Math.random() * (950 - boxWidth);
               canvasY = 50 + Math.random() * 450;
             }
             
@@ -610,14 +835,14 @@ export default function Hero() {
               return !(x1 + w1 < x2 || x1 > x2 + w2 || y1 + h1 < y2 || y1 > y2 + h2);
             };
 
-            const overlapsTitle = !isMobile && overlaps(canvasX, canvasY, 320, 90, 360, 48, 400, 160);
-            const overlapsSurname = !isMobile && overlaps(canvasX, canvasY, 320, 90, 760, 80, 350, 140);
-            const overlapsSummary = !isMobile && overlaps(canvasX, canvasY, 320, 90, 360, 240, 680, 120);
+            const overlapsTitle = !isMobile && overlaps(canvasX, canvasY, boxWidth, boxHeight, 360, 48, 400, 160);
+            const overlapsSurname = !isMobile && overlaps(canvasX, canvasY, boxWidth, boxHeight, 760, 80, 350, 140);
+            const overlapsSummary = !isMobile && overlaps(canvasX, canvasY, boxWidth, boxHeight, 360, 240, 680, 120);
             
             // Also check overlap with existing dynamic elements
             let overlapsDynamic = false;
             for (const el of dynamicElementsRef.current) {
-              if (overlaps(canvasX, canvasY, 320, 90, el.x, el.y, el.width ?? 320, el.height ?? 90)) {
+              if (overlaps(canvasX, canvasY, boxWidth, boxHeight, el.x, el.y, el.width ?? boxWidth, el.height ?? boxHeight)) {
                 overlapsDynamic = true;
                 break;
               }
@@ -651,8 +876,8 @@ export default function Hero() {
             type: 'type', 
             x: canvasX, 
             y: canvasY, 
-            width: 320, 
-            height: 90, 
+            width: boxWidth, 
+            height: boxHeight, 
             text: "", 
             theme: randomTheme 
           }]);
@@ -683,7 +908,7 @@ export default function Hero() {
           }
 
           // Fly to trash icon of this box and click it
-          let trashX = bx + 320 - 10;
+          let trashX = bx + boxWidth - 10;
           let trashY = by - 24;
           
           const trashBtn = document.getElementById(`trash-${boxId}`);
@@ -1170,8 +1395,14 @@ export default function Hero() {
             lastInteractionTime.current = Date.now();
           }
 
-          setBotBusy(false);
-          console.log("Bot busy state reset to false");
+          // If any restorations have been requested while we were busy, execute them now!
+          if (pendingRestorations.current.length > 0) {
+            console.log("Executing pending bot restorations after action:", actionName);
+            restoreSpecificElementsRef.current([...pendingRestorations.current]);
+          } else {
+            setBotBusy(false);
+            console.log("Bot busy state reset to false");
+          }
         };
 
         runAction();
@@ -1234,8 +1465,8 @@ export default function Hero() {
       <motion.div
         id={id}
         ref={box.ref}
-        style={{ x: box.x, y: box.y, width: box.width, height: box.height }}
-        drag={!isTouchDevice && activeTool === "cursor"} 
+        style={{ x: box.x, y: box.y, width: box.width, height: box.height, touchAction: activeTool === "cursor" ? "none" : "auto" }}
+        drag={activeTool === "cursor"} 
         dragMomentum={false}
         onDragStart={() => setActiveBoxId(id)}
         onDrag={() => handleDrag(id)}
@@ -1364,7 +1595,7 @@ export default function Hero() {
             {renderDraggableBox("title", "Title", (
               <div className="relative w-full h-full flex items-end">
                 <h1 className="w-full text-[8vw] md:text-[6vw] lg:text-[7rem] tracking-[-0.02em] text-[#1a233a] leading-none font-bold select-none px-2 md:px-8 pb-2 md:pb-3 cursor-none">
-                  JAYRAJ
+                  {titleText}
                 </h1>
                 {activeBoxId === "title" && (
                   <div className="absolute -bottom-5 right-2 md:right-8 md:-bottom-6 z-[60] flex items-center gap-1 md:gap-2 pointer-events-auto select-none scale-75 md:scale-100 origin-right">
@@ -1398,7 +1629,7 @@ export default function Hero() {
                   "w-full text-[8vw] md:text-[6vw] lg:text-[6.5rem] tracking-[-0.02em] text-[#1a233a] leading-none pb-2 md:pb-3 px-2 md:px-8 select-none pointer-events-none cursor-none no-fancy",
                   isPixelFont ? "font-[family-name:var(--font-rubik-pixels)] text-[#3b82f6] opacity-80" : "font-bold"
                 )}>
-                  PATEL
+                  {surnameText}
                 </h2>
                 {activeBoxId === "surname" && (
                   <div className="absolute -bottom-5 right-2 md:right-8 md:-bottom-6 z-[60] flex items-center gap-1 md:gap-2 pointer-events-auto select-none scale-75 md:scale-100 origin-right">
@@ -1428,7 +1659,7 @@ export default function Hero() {
             {/* Summary (Centered Below) */}
             {renderDraggableBox("summary", "Summary", (
               <p className="w-full h-full text-[#5f6368] text-xs sm:text-sm md:text-base font-[family-name:var(--font-manrope)] leading-relaxed font-light px-4 md:px-6 py-4 md:py-5 select-none cursor-none bg-white/40 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-sm">
-                Aspiring software engineer with hands-on experience in cross-platform development and integrating Large Language Models. Eager to learn, build simple solutions for complex challenges, and contribute to great teams.
+                {summaryText}
               </p>
             ), "left-4 md:left-[calc(50%-340px)] w-[calc(100%-32px)] md:w-[680px] top-[110px] md:top-[240px] h-[170px] md:h-[120px]")}
 
@@ -1446,6 +1677,8 @@ export default function Hero() {
                 handleDragEndComplete={handleDragEndComplete}
                 isTouchDevice={isTouchDevice}
                 setDynamicElements={setDynamicElements}
+                editingElementId={editingElementId}
+                setEditingElementId={setEditingElementId}
               />
             ))}
 
@@ -1487,6 +1720,8 @@ export default function Hero() {
         <FigmaToolbar activeTool={activeTool} setActiveTool={setActiveTool} isVisible={isScrollInHero} />,
         document.body
       )}
+
+
 
     </section>
   );

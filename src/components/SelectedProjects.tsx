@@ -25,14 +25,14 @@ const projects = [
     glowClass: "",
     logoClass: "max-w-[260px] sm:max-w-[300px] aspect-square",
     imgClass: "filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] group-hover/logo:drop-shadow-[0_15px_30px_rgba(59,130,246,0.2)]",
-    glowColor1: "rgb(59,130,246)",
-    glowColor2: "rgb(6,182,212)"
+    glowColor1: "#ffffffff",
+    glowColor2: "#A697FF"
   },
   {
     id: "yatna",
     title: "Yatna.fit",
-    description: "Full-stack fitness platform, owning the end-to-end development lifecycle from initial database design to production deployment.",
-    tech: ["REACT 19", "NODE.JS", "MONGODB", "TAILWIND"],
+    description: "A highly optimized, science-based fitness ecosystem and data-dense body matrix tracking vital composition, morphology scans, and high-fidelity workout execution (Iron Log). Fully self-engineered from logo design, automated testing, and CI/CD pipelines, to upcoming native iOS and Android mobile applications.",
+    tech: ["REACT 19", "NODE.JS", "MONGODB", "TAILWIND", "CI/CD", "MOBILE"],
     link: "https://yatna.fit",
     placeholder: "Y",
     align: "left",
@@ -41,8 +41,8 @@ const projects = [
     glowClass: "",
     logoClass: "max-w-[260px] sm:max-w-[300px] aspect-square",
     imgClass: "filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] group-hover/logo:drop-shadow-[0_15px_30px_rgba(239,68,68,0.2)]",
-    glowColor1: "rgb(239,68,68)",
-    glowColor2: "rgb(249,115,22)"
+    glowColor1: "#ffffffff",
+    glowColor2: "#FF2803"
   },
   {
     id: "bhaktisetu",
@@ -57,8 +57,8 @@ const projects = [
     glowClass: "",
     logoClass: "max-w-[260px] sm:max-w-[300px] aspect-square",
     imgClass: "filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] group-hover/logo:drop-shadow-[0_15px_30px_rgba(79,70,229,0.25)] rounded-[40px] overflow-hidden",
-    glowColor1: "rgb(79,70,229)",
-    glowColor2: "rgb(59,130,246)"
+    glowColor1: "#ffffffff",
+    glowColor2: "#0F324E"
   }
 ];
 

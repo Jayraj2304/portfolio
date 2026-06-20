@@ -11,73 +11,73 @@ interface NetraCarouselModalProps {
 
 const NETRA_IMAGES = [
   {
-    src: "/netra/LOGIN_CLIENT.png",
+    src: "/netra/login_client.png",
     title: "VMS Client Login Portal",
     subtitle: "Security & Authentication",
     description: "Administrative gateway for the Netra VMS Client, featuring secure session handshake, user credential verification, and server socket binding."
   },
   {
-    src: "/netra/DASHBOARD.png",
+    src: "/netra/dashboard.png",
     title: "Client Controls Dashboard",
     subtitle: "Central Command",
     description: "Centralized management console displaying system-wide health diagnostic matrices, camera connection trees, active alarms, and system-wide GPU/CPU utilization curves."
   },
   {
-    src: "/netra/LIVE WATCH PAGE.png",
+    src: "/netra/live_watch_page.png",
     title: "Live Video Streaming Grid",
     subtitle: "Concurrent Feeds Monitoring",
     description: "High-throughput live stream grid rendering concurrent video feeds with sub-150ms latency, leveraging Direct3D11 GPU-accelerated texture composition."
   },
   {
-    src: "/netra/PTZ_LIVE.png",
+    src: "/netra/ptz_live.png",
     title: "PTZ Stream Control & Relays",
     subtitle: "Interactive Camera Manipulation",
     description: "Interactive Pan-Tilt-Zoom (PTZ) controller mapping mouse drag and click coordinates directly to IP cameras with dynamic speed scaling and preset tour trigger panels."
   },
   {
-    src: "/netra/PLAYBACK_SINGLE.png",
+    src: "/netra/playback_single.png",
     title: "Single Feed Archive Playback",
     subtitle: "Historical Investigation",
     description: "Dedicated single-stream historical replay engine equipped with an interactive, scrollable scrub timeline, precision speed controls, and segment extraction tools."
   },
   {
-    src: "/netra/PLAYBACK_MULTI.png",
+    src: "/netra/playback_multi.png",
     title: "Multi-Feed Time-Synced Playback",
     subtitle: "Multi-Coordinate Reconstruction",
     description: "Synchronous timeline playback of up to 4 camera feeds, enabling precise incident investigation and timeline reconstruction across multiple locations."
   },
   {
-    src: "/netra/TOUR_CREATE.png",
+    src: "/netra/tour_create.png",
     title: "Automated Camera Patrol Sequencer",
     subtitle: "Patrol Sequencing & Automation",
     description: "Visual sequencer to program automated camera patrol paths (Tours), scheduling dwell times, pan angles, and zoom ratios per waypoint."
   },
   {
-    src: "/netra/NVR VAULT.png",
+    src: "/netra/nvr_vault.png",
     title: "Storage Tier & Drive Array Controller",
     subtitle: "NVR Storage Management",
     description: "Low-level archive management system tracking recording drive status, storage allocations, retention policies, and disk write performance metrics."
   },
   {
-    src: "/netra/SERVER DASHBOARD.png",
+    src: "/netra/server_dashboard.png",
     title: "Socket Relays & Hardware Relays",
     subtitle: "Active Server Management",
     description: "Active system manager displaying socket relays, real-time client traffic, active frame processing rates, and system temperature indicators."
   },
   {
-    src: "/netra/STAUTUS OF CAMERA.png",
+    src: "/netra/status_of_camera.png",
     title: "Camera Diagnostics Matrix",
     subtitle: "Quality & Stream Integrity",
     description: "Diagnostic panel displaying real-time stream parameters: frame rate (FPS), incoming bitrate, active video codec, and network packets lost."
   },
   {
-    src: "/netra/ROLE BASE USER CREATION .png",
+    src: "/netra/role_base_user_creation.png",
     title: "RBAC Access Control Editor",
     subtitle: "User Permissions & Roles",
     description: "Fine-grained administrative portal managing user access profiles, camera-specific viewing permissions, and active audit logs."
   },
   {
-    src: "/netra/WEV_DASHBOARD (2).png",
+    src: "/netra/web_dashboard_2.png",
     title: "Web Administration Console",
     subtitle: "Remote Web Portal",
     description: "Responsive React Web dashboard designed for administrators to audit device health, stream status, and system alerts remotely."
@@ -232,25 +232,38 @@ export default function NetraCarouselModal({ isOpen, onClose }: NetraCarouselMod
               <ChevronLeft size={24} />
             </button>
 
-            <div className="relative w-full h-full flex items-center justify-center p-2">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  transition={{ duration: 0.4, ease: "easeInOut" }}
-                  className="relative max-w-full max-h-full rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 flex items-center justify-center bg-black"
-                >
-                  <img
-                    src={NETRA_IMAGES[currentIndex].src}
-                    alt={NETRA_IMAGES[currentIndex].title}
-                    className="max-w-full max-h-[50vh] lg:max-h-[60vh] object-contain select-none"
-                  />
-                  {/* Glassmorphic border reflection */}
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/5 to-white/10" />
-                </motion.div>
-              </AnimatePresence>
+            <div className="relative w-full max-w-[800px] flex flex-col items-center p-4">
+              {/* Laptop Screen Body */}
+              <div className="relative w-full aspect-[16/9] bg-slate-950 border-[10px] sm:border-[14px] border-slate-800 rounded-t-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden flex flex-col border-b-0">
+                {/* Top Bezel Camera Dot */}
+                <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-slate-700/60 flex items-center justify-center z-20">
+                  <div className="w-0.5 h-0.5 rounded-full bg-blue-500/80"></div>
+                </div>
+                
+                {/* Screen Content */}
+                <div className="flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={currentIndex}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.35, ease: "easeInOut" }}
+                      src={NETRA_IMAGES[currentIndex].src}
+                      alt={NETRA_IMAGES[currentIndex].title}
+                      className="w-full h-full object-contain select-none"
+                    />
+                  </AnimatePresence>
+                  {/* Screen glare/reflection overlay */}
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/5 to-white/10 z-10" />
+                </div>
+              </div>
+
+              {/* Laptop Hinge & Base */}
+              <div className="relative w-[108%] h-2.5 sm:h-3.5 bg-gradient-to-b from-slate-300 via-slate-400 to-slate-500 rounded-b-2xl shadow-2xl flex items-center justify-center border-t border-slate-600/50">
+                {/* Trackpad Indentation */}
+                <div className="w-16 sm:w-24 h-1 bg-slate-600/30 rounded-t border-t border-white/10" />
+              </div>
             </div>
 
             <button

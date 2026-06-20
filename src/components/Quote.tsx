@@ -58,7 +58,7 @@ export default function Quote() {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-12 md:gap-16">
 
           {/* Avatar Area (Left) */}
-          <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full border border-white/10 overflow-hidden bg-gray-800 shadow-xl shrink-0 select-none">
+          <div className="relative w-40 h-40 md:w-32 md:h-32 rounded-full border border-white/10 overflow-hidden bg-gray-800 shadow-xl shrink-0 select-none">
             <img
               src="/profile.png"
               alt="Jayraj Patel"

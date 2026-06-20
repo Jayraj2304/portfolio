@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Terminal, Send } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 type Message = {
   role: "user" | "ai";
@@ -41,8 +42,19 @@ export default function AiTerminal() {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     if (messages.length > INITIAL_MESSAGES.length || isLoading) {
@@ -90,6 +102,7 @@ export default function AiTerminal() {
   const quickActions = [
     "what's your stack?",
     "tell me about Netra",
+    "tell me about Yatna",
     "are you available?",
     "summarize your experience"
   ];
@@ -103,15 +116,22 @@ export default function AiTerminal() {
         </span>
       </div>
 
-      <div className="w-full bg-[#121826] min-h-[60vh] flex items-center justify-center py-24 px-6 relative z-10">
+      <div className={cn(
+        "w-full bg-[#121826] min-h-[60vh] flex items-center justify-center px-6 relative z-10 transition-all duration-300",
+        isFocused && isMobile ? "pt-24 pb-[450px]" : "py-24"
+      )}>
         
         {/* Terminal Container */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95, y: 40 }}
-          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1 }}
+          animate={{ y: isFocused ? -8 : 0 }}
           viewport={{ once: true, amount: 0.2 }}
-          transition={{ type: "spring", stiffness: 80, damping: 15 }}
-          className="w-full max-w-4xl border border-[#2a3861] rounded bg-[#0f172a] shadow-2xl overflow-hidden flex flex-col font-mono relative"
+          transition={{ type: "spring", stiffness: 150, damping: 22 }}
+          className={cn(
+            "w-full max-w-4xl border rounded bg-[#0f172a] shadow-2xl overflow-hidden flex flex-col font-mono relative transition-all duration-300",
+            isFocused ? "border-cyan-400 shadow-[0_0_35px_rgba(34,211,238,0.25)]" : "border-[#2a3861]"
+          )}
         >
           
           {/* CRT scanline overlay */}
@@ -166,19 +186,35 @@ export default function AiTerminal() {
           )}
 
           {/* Input Area */}
-          <div className="border-t border-[#2a3861] bg-[#1a233a] p-4 px-6 md:px-8 flex items-center gap-3">
+          <div className={cn(
+            "border-t bg-[#1a233a] p-4 px-6 md:px-8 flex items-center gap-3 transition-all duration-300",
+            isFocused ? "border-cyan-400" : "border-[#2a3861]"
+          )}>
             <span className="text-green-400 text-xs md:text-sm whitespace-nowrap">client@jayraj ~ %</span>
             <input 
               type="text" 
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1 bg-transparent outline-none text-gray-300 text-xs md:text-sm"
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder="Ask me about projects, stack, or experience..."
+              className="flex-1 bg-transparent outline-none text-gray-300 text-base md:text-sm placeholder-gray-500"
               disabled={isLoading}
             />
-            <span className="text-[10px] text-gray-500 border border-gray-600 px-1.5 rounded hidden md:block">
-              ENTER to send
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-gray-500 border border-gray-600 px-1.5 py-0.5 rounded hidden md:block uppercase tracking-wider font-mono">
+                Enter
+              </span>
+              <button
+                onClick={() => handleSend()}
+                disabled={isLoading || !input.trim()}
+                className="p-2 text-cyan-400 hover:text-cyan-300 disabled:text-gray-600 disabled:cursor-not-allowed transition-all rounded-full hover:bg-white/5 active:scale-95 flex items-center justify-center"
+                aria-label="Send message"
+              >
+                <Send size={16} />
+              </button>
+            </div>
           </div>
 
         </motion.div>

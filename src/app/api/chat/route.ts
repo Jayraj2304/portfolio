@@ -126,7 +126,7 @@ User question: ${message}`;
   if (userMsg.includes("project") || userMsg.includes("work")) {
     fallbackReply += "JAYRAJ'S PROJECTS:\n" +
                      "1. ICE MAKE NETRA VMS - Federated Video Management System (.NET 10, C#, WPF, React, Direct3D11, FFmpeg).\n" +
-                     "2. Yatna.fit - Full-stack fitness platform (React 19, Node.js, MongoDB, Tailwind).\n" +
+                     "2. Yatna.fit - Science-based fitness ecosystem and data-dense body composition matrix (React 19, Node.js, MongoDB, Tailwind CSS, CI/CD, React Native mobile apps).\n" +
                      "3. SSYV BhaktiSetu - Devotee management & networking platform (Next.js 15, React 19, Docker, Tailwind 4, TypeScript).";
   } else if (userMsg.includes("experience") || userMsg.includes("job") || userMsg.includes("role") || userMsg.includes("volunteer")) {
     fallbackReply += "JAYRAJ'S EXPERIENCE:\n" +
