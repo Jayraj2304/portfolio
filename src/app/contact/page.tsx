@@ -12,6 +12,7 @@ export default function ContactPage() {
   const [captchaState, setCaptchaState] = useState<"idle" | "loading" | "verified">("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCaptchaVerify = () => {
     if (captchaState !== "idle") return;
@@ -21,17 +22,37 @@ export default function ContactPage() {
     }, 1500);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (captchaState !== "verified" || isSubmitting) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong. Please try again.");
+      }
+
       setIsSent(true);
       setFormData({ name: "", email: "", message: "" });
       setCaptchaState("idle");
-    }, 2000);
+    } catch (err: any) {
+      console.error("Contact form submission error:", err);
+      setError(err.message || "Failed to send message. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -195,6 +216,12 @@ export default function ContactPage() {
                       className="w-full bg-gray-50 border border-gray-200 focus:border-black rounded-lg p-4 text-[14px] text-gray-800 outline-none transition-colors placeholder-gray-400 font-medium resize-none cursor-none"
                     />
                   </div>
+
+                  {error && (
+                    <div className="text-red-500 text-xs font-semibold bg-red-50 border border-red-100 rounded-lg p-4">
+                      {error}
+                    </div>
+                  )}
 
                   {/* CAPTCHA Validation Checkbox */}
                   <div className="flex items-center gap-4 border border-gray-150 rounded-lg p-4 bg-gray-50/50">
